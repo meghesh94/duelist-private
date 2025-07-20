@@ -163,7 +163,6 @@ export function useGameState() {
             let updatedPlayer = { ...prevState.players.player };
             let updatedAI = { ...prevState.players.ai };
             
-            updatedPlayer.hp = Math.max(0, updatedPlayer.hp - combatResult.playerDamage);
             // Apply damage
             updatedPlayer.hp = Math.max(0, updatedPlayer.hp - combatResult.playerDamage);
             updatedAI.hp = Math.max(0, updatedAI.hp - combatResult.aiDamage);
@@ -248,7 +247,6 @@ export function useGameState() {
               }
             });
             
-            updatedPlayer = updateStatusEffects(updatedPlayer);
             // Update status effect durations
             updatedPlayer = updateStatusEffects(updatedPlayer);
             updatedAI = updateStatusEffects(updatedAI);
@@ -350,4 +348,3 @@ export function useGameState() {
   };
 }
 
-export { useGameState }

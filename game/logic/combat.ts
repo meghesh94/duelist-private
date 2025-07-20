@@ -73,16 +73,6 @@ function processAction(
     case 'damage':
       let baseDamage = isStunned ? Math.ceil(action.power / 2) : action.power;
       
-      // Special case for Berserker Rage - self damage
-      if (action.id === 'rage') {
-        logs.push({
-          id: `${turn}-${actorType}-rage-self`,
-          turn,
-          message: `${actor.name} takes 2 damage from rage!`,
-          type: 'damage',
-          timestamp: Date.now(),
-        });
-      }
       
       damage = calculateDamage(baseDamage, target);
       if (damage > 0) {
