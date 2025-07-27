@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Shield, Zap, Wind } from 'lucide-react-native';
+import { Shield, Zap, Wind, Droplets, Snowflake } from 'lucide-react-native';
 import { Player } from '../../types/game';
 
 interface PlayerStatusProps {
@@ -16,6 +16,8 @@ export function PlayerStatus({ player, isAI }: PlayerStatusProps) {
       case 'block': return Shield;
       case 'stun': return Zap;
       case 'dodge': return Wind;
+      case 'poison': return Droplets;
+      case 'freeze': return Snowflake;
       default: return Shield;
     }
   };
@@ -45,6 +47,10 @@ export function PlayerStatus({ player, isAI }: PlayerStatusProps) {
         </View>
       </View>
 
+      {/* Show 'Stunned' label if player is stunned */}
+      {player.statusEffects.some(e => e.type === 'stun') && (
+        <Text style={{ color: '#EF4444', fontWeight: 'bold', marginTop: 4 }}>Stunned</Text>
+      )}
       {player.statusEffects.length > 0 && (
         <View style={styles.statusEffects}>
           {player.statusEffects.map((effect, index) => {
@@ -52,6 +58,7 @@ export function PlayerStatus({ player, isAI }: PlayerStatusProps) {
             return (
               <View key={`${effect.id}-${index}`} style={styles.statusEffect}>
                 <StatusIcon size={16} color="#F59E0B" strokeWidth={2} />
+                <Text style={styles.statusText}>{effect.name}</Text>
                 <Text style={styles.statusDuration}>{effect.duration}</Text>
               </View>
             );
@@ -130,10 +137,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  statusDuration: {
+  statusText: {
     color: '#F59E0B',
     fontSize: 12,
     fontWeight: '700',
     marginLeft: 4,
+    marginRight: 2,
+  },
+  statusDuration: {
+    color: '#F59E0B',
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 2,
   },
 });

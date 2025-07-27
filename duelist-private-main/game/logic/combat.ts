@@ -28,53 +28,139 @@ export function resolveCombat(
 
   // Process both actions, collect status effects first
   let playerResult, aiResult;
-  if (playerStunned) {
+  // First, process both actions to see if either is a stun
+  let playerStunsAI = false;
+  let aiStunsPlayer = false;
+  if (playerAction.type === 'stun') playerStunsAI = true;
+  if (aiAction.type === 'stun') aiStunsPlayer = true;
+
+  // If both stun, both are stunned and do nothing
+  if (playerStunsAI && aiStunsPlayer) {
+    // Both stunned: add temporary stunned effect to both for this turn
     battleLog.push({
-      id: `${turn}-player-stunned`,
+      id: `${turn}-both-stunned`,
       turn,
-      message: `${player.name} is stunned and cannot act this turn!`,
+      message: `Both ${player.name} and ${ai.name} are stunned and cannot act this turn!`,
       type: 'status',
       timestamp: Date.now(),
     });
-    playerResult = { damage: 0, heal: 0, selfDamage: 0, logs: [], statusEffects: [] };
-  } else {
+    player.statusEffects.push({
+      id: `stunned-${turn}`,
+      name: 'Stunned',
+      type: 'stun',
+      duration: 1,
+      icon: 'zap',
+    });
+    ai.statusEffects.push({
+      id: `stunned-${turn}`,
+      name: 'Stunned',
+      type: 'stun',
+      duration: 1,
+      icon: 'zap',
+    });
+    playerResult = { damage: 0, heal: 0, selfDamage: 0, logs: [], selfStatusEffects: [], targetStatusEffects: [] };
+    aiResult = { damage: 0, heal: 0, selfDamage: 0, logs: [], selfStatusEffects: [], targetStatusEffects: [] };
+  } else if (playerStunsAI) {
+    // Player stuns AI: AI does nothing, player acts
     playerResult = processAction(player, ai, playerAction, 'player', turn, false);
     battleLog.push(...playerResult.logs);
-  }
-
-  if (aiStunned) {
+    if (playerResult.selfStatusEffects && playerResult.selfStatusEffects.length > 0) {
+      player.statusEffects.push(...playerResult.selfStatusEffects);
+    }
     battleLog.push({
-      id: `${turn}-ai-stunned`,
+      id: `${turn}-ai-stunned-immediate`,
       turn,
       message: `${ai.name} is stunned and cannot act this turn!`,
       type: 'status',
       timestamp: Date.now(),
     });
-    aiResult = { damage: 0, heal: 0, selfDamage: 0, logs: [], statusEffects: [] };
-  } else {
+    ai.statusEffects.push({
+      id: `stunned-${turn}`,
+      name: 'Stunned',
+      type: 'stun',
+      duration: 1,
+      icon: 'zap',
+    });
+    aiResult = { damage: 0, heal: 0, selfDamage: 0, logs: [], selfStatusEffects: [], targetStatusEffects: [] };
+  } else if (aiStunsPlayer) {
+    // AI stuns player: player does nothing, AI acts
+    battleLog.push({
+      id: `${turn}-player-stunned-immediate`,
+      turn,
+      message: `${player.name} is stunned and cannot act this turn!`,
+      type: 'status',
+      timestamp: Date.now(),
+    });
+    player.statusEffects.push({
+      id: `stunned-${turn}`,
+      name: 'Stunned',
+      type: 'stun',
+      duration: 1,
+      icon: 'zap',
+    });
+    playerResult = { damage: 0, heal: 0, selfDamage: 0, logs: [], selfStatusEffects: [], targetStatusEffects: [] };
+    // Always log the actual AI action used
+    battleLog.push({
+      id: `${turn}-ai-action-actual`,
+      turn,
+      message: `${ai.name} uses ${aiAction.name}!`,
+      type: 'action',
+      timestamp: Date.now(),
+    });
     aiResult = processAction(ai, player, aiAction, 'ai', turn, false);
     battleLog.push(...aiResult.logs);
+    if (aiResult.selfStatusEffects && aiResult.selfStatusEffects.length > 0) {
+      ai.statusEffects.push(...aiResult.selfStatusEffects);
+    }
+  } else {
+    // Normal case: both act
+    playerResult = processAction(player, ai, playerAction, 'player', turn, false);
+    battleLog.push(...playerResult.logs);
+    if (playerResult.selfStatusEffects && playerResult.selfStatusEffects.length > 0) {
+      player.statusEffects.push(...playerResult.selfStatusEffects);
+    }
+    battleLog.push({
+      id: `${turn}-ai-action-actual`,
+      turn,
+      message: `${ai.name} uses ${aiAction.name}!`,
+      type: 'action',
+      timestamp: Date.now(),
+    });
+    aiResult = processAction(ai, player, aiAction, 'ai', turn, false);
+    battleLog.push(...aiResult.logs);
+    if (aiResult.selfStatusEffects && aiResult.selfStatusEffects.length > 0) {
+      ai.statusEffects.push(...aiResult.selfStatusEffects);
+    }
   }
 
-  // Apply status effects from both actions BEFORE calculating damage
-  player.statusEffects.push(...(playerResult.selfStatusEffects ?? []));
-  ai.statusEffects.push(...(aiResult.selfStatusEffects ?? []));
-  // Only apply targetStatusEffects to the intended target
-  ai.statusEffects.push(...(playerResult.targetStatusEffects ?? []));
-  player.statusEffects.push(...(aiResult.targetStatusEffects ?? []));
+  // Save target status effects to apply after end-of-turn effects
+  const pendingPlayerTargetStatus = playerResult.targetStatusEffects ?? [];
+  const pendingAITargetStatus = aiResult.targetStatusEffects ?? [];
 
   // Now recalculate damage using updated status effects
   // Player receives damage from AI action, heals/self-damage from own action
   const aiDamageFinal = aiStunned ? 0 : calculateDamage(aiResult.damage ?? 0, player);
+  // Block healing if player is frozen (freeze effect active, duration === 1)
+  const playerFrozen = player.statusEffects.some(effect => effect.type === 'freeze' && effect.duration === 1);
   if (playerResult.heal) {
-    player.hp += playerResult.heal;
-    battleLog.push({
-      id: `${turn}-player-hp-heal`,
-      turn,
-      message: `${player.name} HP after heal: ${player.hp}`,
-      type: 'system',
-      timestamp: Date.now(),
-    });
+    if (playerFrozen) {
+      battleLog.push({
+        id: `${turn}-player-heal-blocked-freeze`,
+        turn,
+        message: `${player.name}'s healing is blocked by freeze!`,
+        type: 'status',
+        timestamp: Date.now(),
+      });
+    } else {
+      player.hp += playerResult.heal;
+      battleLog.push({
+        id: `${turn}-player-hp-heal`,
+        turn,
+        message: `${player.name} HP after heal: ${player.hp}`,
+        type: 'system',
+        timestamp: Date.now(),
+      });
+    }
   }
   if (playerResult.selfDamage) {
     player.hp -= playerResult.selfDamage;
@@ -99,15 +185,27 @@ export function resolveCombat(
 
   // AI receives damage from player action, heals/self-damage from own action
   const playerDamageFinal = playerStunned ? 0 : calculateDamage(playerResult.damage ?? 0, ai);
+  // Block healing if AI is frozen (freeze effect active, duration === 1)
+  const aiFrozen = ai.statusEffects.some(effect => effect.type === 'freeze' && effect.duration === 1);
   if (aiResult.heal) {
-    ai.hp += aiResult.heal;
-    battleLog.push({
-      id: `${turn}-ai-hp-heal`,
-      turn,
-      message: `${ai.name} HP after heal: ${ai.hp}`,
-      type: 'system',
-      timestamp: Date.now(),
-    });
+    if (aiFrozen) {
+      battleLog.push({
+        id: `${turn}-ai-heal-blocked-freeze`,
+        turn,
+        message: `${ai.name}'s healing is blocked by freeze!`,
+        type: 'status',
+        timestamp: Date.now(),
+      });
+    } else {
+      ai.hp += aiResult.heal;
+      battleLog.push({
+        id: `${turn}-ai-hp-heal`,
+        turn,
+        message: `${ai.name} HP after heal: ${ai.hp}`,
+        type: 'system',
+        timestamp: Date.now(),
+      });
+    }
   }
   if (aiResult.selfDamage) {
     ai.hp -= aiResult.selfDamage;
@@ -135,30 +233,38 @@ export function resolveCombat(
   aiDamage = playerDamageFinal; // Damage dealt to AI by player
 
 
-  // Apply poison/freeze effects at end of turn
+  // Apply poison/freeze effects at end of turn (before adding new status effects)
   [player, ai].forEach(p => {
     p.statusEffects.forEach(effect => {
       if (effect.type === 'poison') {
-        p.hp -= effect.power ?? 2;
-        battleLog.push({
-          id: `${turn}-${p.name}-poison-tick`,
-          turn,
-          message: `${p.name} takes ${effect.power ?? 2} poison damage!`,
-          type: 'damage',
-          timestamp: Date.now(),
-        });
+        // Only apply poison if duration < original duration (i.e., not just applied this turn)
+        if (effect.duration < 3) {
+          p.hp -= effect.power ?? 2;
+          battleLog.push({
+            id: `${turn}-${p.name}-poison-tick`,
+            turn,
+            message: `${p.name} takes ${effect.power ?? 2} poison damage!`,
+            type: 'damage',
+            timestamp: Date.now(),
+          });
+        }
       }
-      if (effect.type === 'freeze' && (turn % 3 === 0)) {
+      // Log freeze removal when duration will expire next turn
+      if (effect.type === 'freeze' && effect.duration === 1) {
         battleLog.push({
-          id: `${turn}-${p.name}-freeze-skip`,
+          id: `${turn}-${p.name}-freeze-removed`,
           turn,
-          message: `${p.name} is slowed and skips this turn!`,
+          message: `${p.name} is no longer frozen!`,
           type: 'status',
           timestamp: Date.now(),
         });
       }
     });
   });
+
+  // Now apply new target status effects after end-of-turn effects
+  ai.statusEffects.push(...pendingPlayerTargetStatus);
+  player.statusEffects.push(...pendingAITargetStatus);
 
   // Clamp HP to maxHp after all effects
   player.hp = Math.max(0, Math.min(player.hp, player.maxHp));
@@ -294,32 +400,21 @@ function processAction(
       break;
     }
     case 'stun': {
-      damage = calculateDamage(isStunned ? Math.ceil(action.power / 2) : action.power, target);
-      if (damage > 0) {
-        logs.push({
-          id: `${turn}-${actorType}-stun-damage`,
-          turn,
-          message: `${target.name} takes ${damage} damage from the stun attack!`,
-          type: 'damage',
-          timestamp: Date.now(),
-        });
+      // Stun now cancels the opponent's action this turn, not next turn
+      // Only apply damage if stun has power
+      if (action.power && action.power > 0) {
+        damage = calculateDamage(isStunned ? Math.ceil(action.power / 2) : action.power, target);
+        if (damage > 0) {
+          logs.push({
+            id: `${turn}-${actorType}-stun-damage`,
+            turn,
+            message: `${target.name} takes ${damage} damage from the stun attack!`,
+            type: 'damage',
+            timestamp: Date.now(),
+          });
+        }
       }
-      if (!isStunned) {
-        targetStatusEffects.push({
-          id: `stun-${turn}`,
-          name: 'Stunned',
-          type: 'stun',
-          duration: 1,
-          icon: 'zap',
-        });
-        logs.push({
-          id: `${turn}-${actorType}-stun-effect`,
-          turn,
-          message: `${target.name} will be stunned next turn!`,
-          type: 'status',
-          timestamp: Date.now(),
-        });
-      }
+      // No longer apply a stun status effect for next turn
       break;
     }
     case 'drain': {
@@ -371,21 +466,34 @@ function processAction(
           timestamp: Date.now(),
         });
       }
-      targetStatusEffects.push({
-        id: `poison-${turn}`,
-        name: 'Poisoned',
-        type: 'poison',
-        duration: 3,
-        icon: 'droplets',
-        power: 2,
-      });
-      logs.push({
-        id: `${turn}-${actorType}-poison-effect`,
-        turn,
-        message: `${target.name} is poisoned for 3 turns (2 damage/turn)!`,
-        type: 'status',
-        timestamp: Date.now(),
-      });
+      // Prevent stacking: refresh poison if already present, else add new
+      const existingPoison = target.statusEffects.find(e => e.type === 'poison');
+      if (existingPoison) {
+        existingPoison.duration = 3;
+        logs.push({
+          id: `${turn}-${actorType}-poison-refresh`,
+          turn,
+          message: `${target.name}'s poison is refreshed to 3 turns!`,
+          type: 'status',
+          timestamp: Date.now(),
+        });
+      } else {
+        targetStatusEffects.push({
+          id: `poison-${turn}`,
+          name: 'Poisoned',
+          type: 'poison',
+          duration: 3,
+          icon: 'droplets',
+          power: 2,
+        });
+        logs.push({
+          id: `${turn}-${actorType}-poison-effect`,
+          turn,
+          message: `${target.name} is poisoned for 3 turns (2 damage/turn)!`,
+          type: 'status',
+          timestamp: Date.now(),
+        });
+      }
       break;
     }
     case 'freeze': {
@@ -401,23 +509,21 @@ function processAction(
       }
       targetStatusEffects.push({
         id: `freeze-${turn}`,
-        name: 'Slowed',
+        name: 'Frozen',
         type: 'freeze',
-        duration: 6,
+        duration: 2, // so after end-of-turn decrement, 1 turn remains
         icon: 'snowflake',
-        power: 3,
+        power: 0,
       });
       logs.push({
         id: `${turn}-${actorType}-freeze-effect`,
         turn,
-        message: `${target.name} is slowed (will skip 1/3 turns)!`,
+        message: `${target.name} is frozen and cannot heal next turn!`,
         type: 'status',
         timestamp: Date.now(),
       });
       break;
     }
-    default:
-      break;
   }
 
   // Handle special ability effects after main logic

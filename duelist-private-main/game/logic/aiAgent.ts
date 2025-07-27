@@ -13,63 +13,120 @@ export async function getAgentMoveLLM(
   // Clamp HP values to max
   const safeAiHp = Math.min(ai.hp, ai.maxHp);
   const safePlayerHp = Math.min(player.hp, player.maxHp);
-  // Also clamp actual HP values for both AI and player
   ai.hp = safeAiHp;
   player.hp = safePlayerHp;
-  // Summarize previous ability usage
   const recentPlayerMoves = battleLog.filter(e => e.type === 'action' && e.message.includes(player.name)).map(e => e.message).join(' | ');
   const recentAIMoves = battleLog.filter(e => e.type === 'action' && e.message.includes(ai.name)).map(e => e.message).join(' | ');
-  // Player status effects
   const playerStatus = player.statusEffects.length > 0
     ? player.statusEffects.map(e => `${e.name}${e.type ? ` (${e.type})` : ''}`).join(', ')
     : 'None';
-  // Full battle log summary
   const battleLogSummary = battleLog.map(e => `[Turn ${e.turn || '?'}] ${e.message}`).join('\n');
-  const prompt = `
-You are a strategic duelist AI. Your current HP: ${safeAiHp}/${ai.maxHp}. Opponent HP: ${safePlayerHp}/${player.maxHp}.
+
+  // Step 1: Ask LLM to pick the best ability
+  const pickPrompt = `
+You are a strategic duelist AI. Your goal is to win the duel by making the smartest possible move each turn.
+Your current HP: ${safeAiHp}/${ai.maxHp}. Opponent HP: ${safePlayerHp}/${player.maxHp}.
+
+---
+ABILITY REFERENCE (latest rules):
+- Strike (damage): Deal 5 damage to opponent.
+- Heal (heal): Restore 4 HP.
+- Block (block): Reduce incoming damage by 4 this turn. Block is applied immediately and protects against all attacks this turn.
+- Stun (stun): Deal 2 damage and immediately cancel the opponent's action this turn (they do nothing, and no effects from their ability are applied).
+- Drain (drain): Deal 3 damage and heal for the damage dealt.
+- Fireball (damage): Deal 7 damage but 50% chance to miss.
+- Dodge (dodge): Avoid all damage this turn.
+- Poison Strike (poison): Deal 2 damage and poison for 2 damage/turn for 3 turns. Poison does not stack, but is refreshed if reapplied. Poison damage is applied at the end of each turn, starting from the next turn after application.
+- Berserker Rage (damage): Deal 6 damage but take 3 self-damage.
+- Magic Shield (block): Block all damage for 1 turn (2-turn cooldown).
+- Vampiric Strike (drain): Deal 4 damage and heal for damage dealt.
+- Ice Shard (freeze): Deal 3 damage and freeze the enemy. Freeze blocks all healing for 1 turn, starting from the next turn after application.
+---
+
 Your available abilities: ${aiOptions.map(a => `${a.name} (${a.type}, power: ${a.power})`).join(', ')}.
 Opponent's current status: ${playerStatus}
 Your previous moves: ${recentAIMoves || 'None'}
-Opponent's previous moves: ${recentPlayerMoves || 'None'}
 Battle log so far:\n${battleLogSummary}
-Describe your reasoning and choose the best ability to win. Respond ONLY in valid JSON, with this format: { "abilityId": "...", "thought": "..." }
-If you cannot decide, pick the first ability and explain why. Do not include any text outside the JSON object.
+
+INSTRUCTIONS:
+- Always consider your own HP, opponent's HP, and the available abilities.
+- If your HP is low (e.g., 5 or less), avoid risky or self-damaging moves (like Berserker Rage) unless it will guarantee a win.
+- Prioritize healing, blocking, or dodging when your HP is low.
+- Only use self-damaging or risky moves if you are sure it will defeat the opponent or is the best strategic option.
+- Pick the move that maximizes your chance to win and survive.
+
+Choose the best ability to win. Respond ONLY in valid JSON, with this format: { "abilityId": "..." }
+IMPORTANT: Respond with only the abilityId you select. Do not include any explanation or extra fields. Do not include any text outside the JSON object.
 `;
 
   try {
-    // Call backend proxy instead of OpenAI directly
-    const response = await fetch('http://localhost:3001/openai', {
+    // Step 1: Pick the move
+    const response = await fetch('http://192.168.1.28:3001/openai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 150,
+        messages: [{ role: 'user', content: pickPrompt }],
+        max_tokens: 1500,
+        model: "gpt-4",
         temperature: 0.7
       })
     });
     const data = await response.json();
-    console.log('Raw LLM response:', JSON.stringify(data));
+    console.log('Raw LLM response (pick):', JSON.stringify(data));
     if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
       console.log('AI Thought: No valid response from LLM.');
       return { abilityId: aiOptions[0].id, thought: 'AI fallback: No valid response from LLM.' };
     }
     const match = data.choices[0].message.content.match(/{.*}/s);
+    let chosenAbilityId = aiOptions[0].id;
     if (match) {
       try {
         const parsed = JSON.parse(match[0]);
-        if (parsed.abilityId && parsed.thought) {
-          console.log('AI Thought:', parsed.thought);
-          return { abilityId: parsed.abilityId, thought: parsed.thought };
+        if (parsed.abilityId) {
+          chosenAbilityId = parsed.abilityId;
         }
       } catch (e) {
         console.log('AI Thought: Invalid JSON from LLM.');
-        return { abilityId: aiOptions[0].id, thought: 'AI fallback: Invalid JSON from LLM.' };
       }
     }
-    console.log('AI Thought: No valid move from LLM.');
-    return { abilityId: aiOptions[0].id, thought: 'AI fallback: No valid move from LLM.' };
+    const chosenAbility = aiOptions.find(a => a.id === chosenAbilityId) || aiOptions[0];
+
+    // Step 2: Ask LLM to explain the move
+    const explainPrompt = `
+You are a strategic duelist AI. You have just chosen to use the ability "${chosenAbility.name}" (${chosenAbility.type}).
+Game state:
+- Your HP: ${safeAiHp}/${ai.maxHp}
+- Opponent HP: ${safePlayerHp}/${player.maxHp}
+- Your available abilities: ${aiOptions.map(a => a.name).join(', ')}
+- Opponent's current status: ${playerStatus}
+- Your previous moves: ${recentAIMoves || 'None'}
+- Battle log so far:\n${battleLogSummary}
+
+IMPORTANT: You do NOT know what ability the opponent will use this turn. Do not reference or speculate about the opponent's next move. Only explain your own reasoning based on the current state.
+Explain in 1-2 sentences, in natural language, why you chose this move. Be concise and strategic.
+`;
+    const explainResponse = await fetch('http://192.168.1.28:3001/openai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: explainPrompt }],
+        max_tokens: 1500,
+        temperature: 0.7
+      })
+    });
+    const explainData = await explainResponse.json();
+    let thought = '';
+    if (explainData.choices && explainData.choices[0] && explainData.choices[0].message && explainData.choices[0].message.content) {
+      thought = explainData.choices[0].message.content.trim();
+    } else {
+      thought = `AI chose ${chosenAbility.name}.`;
+    }
+    console.log('AI Thought:', thought);
+    return { abilityId: chosenAbility.id, thought };
   } catch (err) {
     console.log('AI Thought: Error calling LLM.');
     return { abilityId: aiOptions[0].id, thought: 'AI fallback: Error calling LLM.' };

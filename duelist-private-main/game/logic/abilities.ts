@@ -4,7 +4,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'strike',
     name: 'Strike',
-    description: 'Deal 5 damage to opponent',
+    description: 'Deal 5 damage to opponent.',
     icon: 'sword',
     type: 'damage',
     power: 5,
@@ -12,7 +12,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'heal',
     name: 'Heal',
-    description: 'Restore 4 HP',
+    description: 'Restore 4 HP.',
     icon: 'heart',
     type: 'heal',
     power: 4,
@@ -20,7 +20,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'block',
     name: 'Block',
-    description: 'Reduce incoming damage by 4 this turn',
+    description: 'Reduce incoming damage by 4 this turn. Block is applied immediately and protects against all attacks this turn.',
     icon: 'shield',
     type: 'block',
     power: 4,
@@ -28,7 +28,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'stun',
     name: 'Stun',
-    description: 'Deal 2 damage and stun opponent next turn',
+    description: 'Deal 2 damage and immediately cancel the opponent\'s action this turn (they do nothing, and no effects from their ability are applied).',
     icon: 'zap',
     type: 'stun',
     power: 2,
@@ -36,7 +36,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'drain',
     name: 'Drain',
-    description: 'Deal 3 damage and heal for damage dealt',
+    description: 'Deal 3 damage and heal for the damage dealt.',
     icon: 'droplets',
     type: 'drain',
     power: 3,
@@ -44,7 +44,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'fireball',
     name: 'Fireball',
-    description: 'Deal 7 damage but 50% chance to miss',
+    description: 'Deal 7 damage but 50% chance to miss.',
     icon: 'flame',
     type: 'damage',
     power: 7,
@@ -52,7 +52,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'dodge',
     name: 'Dodge',
-    description: 'Avoid all damage this turn',
+    description: 'Avoid all damage this turn.',
     icon: 'wind',
     type: 'dodge',
     power: 0,
@@ -60,7 +60,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'poison',
     name: 'Poison Strike',
-    description: 'Deal 2 damage and poison for 2 damage/turn for 3 turns',
+    description: 'Deal 2 damage and poison for 2 damage/turn for 3 turns. Poison does not stack, but is refreshed if reapplied. Poison damage is applied at the end of each turn, starting from the next turn after application.',
     icon: 'droplets',
     type: 'poison',
     power: 2,
@@ -68,7 +68,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'rage',
     name: 'Berserker Rage',
-    description: 'Deal 6 damage but take 3 self-damage',
+    description: 'Deal 6 damage but take 1 self-damage.',
     icon: 'sword',
     type: 'damage',
     power: 6,
@@ -76,7 +76,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'shield',
     name: 'Magic Shield',
-    description: 'Block all damage for 1 turn (2-turn cooldown)',
+    description: 'Block all damage for 1 turn (2-turn cooldown).',
     icon: 'shield',
     type: 'block',
     power: 999,
@@ -84,7 +84,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'lifesteal',
     name: 'Vampiric Strike',
-    description: 'Deal 4 damage and heal for damage dealt',
+    description: 'Deal 4 damage and heal for damage dealt.',
     icon: 'heart',
     type: 'drain',
     power: 4,
@@ -92,7 +92,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'freeze',
     name: 'Ice Shard',
-    description: 'Deal 3 damage and slow enemy (skip 1/3 turns)',
+    description: 'Deal 3 damage and freeze the enemy. Freeze blocks all healing for 1 turn, starting from the next turn after application.',
     icon: 'snowflake',
     type: 'freeze',
     power: 3,
