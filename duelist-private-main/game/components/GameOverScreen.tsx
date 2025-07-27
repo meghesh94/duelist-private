@@ -11,6 +11,17 @@ interface GameOverScreenProps {
 export function GameOverScreen({ gameState, onRestart }: GameOverScreenProps) {
   const isVictory = gameState.winner === 'player';
 
+  // Find last turn number (gameState.currentTurn - 1)
+  const lastTurn = gameState.currentTurn - 1;
+  // Find all effects for last turn
+  const lastTurnEffects = gameState.battleLog.filter(
+    (entry) => entry.turn === lastTurn && (entry.type === 'damage' || entry.type === 'heal' || entry.type === 'status')
+  );
+  // Find AI thought for last turn
+  const aiThoughtEntry = gameState.battleLog.find(
+    (entry) => entry.id === `ai-thought-${lastTurn}`
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.resultContainer}>
@@ -19,16 +30,17 @@ export function GameOverScreen({ gameState, onRestart }: GameOverScreenProps) {
           color={isVictory ? '#F59E0B' : '#6B7280'}
           strokeWidth={2}
         />
-        
+
         <Text style={[styles.resultTitle, isVictory ? styles.victory : styles.defeat]}>
-          {isVictory ? 'VICTORY!' : 'DEFEAT!'}
+          {gameState.winner === null ? 'DRAW!' : isVictory ? 'VICTORY!' : 'DEFEAT!'}
         </Text>
-        
+
         <Text style={styles.resultMessage}>
-          {isVictory 
+          {gameState.winner === null
+            ? "Neither duelist prevailed. It's a draw!"
+            : isVictory
             ? 'You have mastered the shadow arts!'
-            : 'The shadows have claimed another soul...'
-          }
+            : 'The shadows have claimed another soul...'}
         </Text>
 
         <View style={styles.finalStats}>
@@ -40,8 +52,20 @@ export function GameOverScreen({ gameState, onRestart }: GameOverScreenProps) {
           </View>
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>Turns Survived:</Text>
-            <Text style={styles.statValue}>{gameState.currentTurn - 1}</Text>
+            <Text style={styles.statValue}>{lastTurn}</Text>
           </View>
+        </View>
+
+        <View style={[styles.finalStats, { marginTop: 20 }]}> 
+          <Text style={[styles.statLabel, { marginBottom: 8, fontWeight: 'bold', fontSize: 18 }]}>Last Turn Recap</Text>
+          <Text style={[styles.statLabel, { marginTop: 8 }]}>Effects:</Text>
+          {lastTurnEffects.length > 0 ? lastTurnEffects.map((entry, idx) => (
+            <Text key={idx} style={styles.statValue}>- {entry.message}</Text>
+          )) : <Text style={styles.statValue}>No effects</Text>}
+          <Text style={[styles.statLabel, { marginTop: 8 }]}>AI Thought:</Text>
+          <Text style={styles.statValue}>
+            {aiThoughtEntry ? aiThoughtEntry.message.replace('AI thought: ', '') : 'N/A'}
+          </Text>
         </View>
       </View>
 

@@ -98,7 +98,13 @@ export function useGameState() {
       let winner: 'player' | 'ai' | null = null;
       let phase = gameState.phase;
       if (updatedPlayer.hp <= 0 && updatedAI.hp <= 0) {
-        winner = 'player';
+        if (updatedPlayer.hp > updatedAI.hp) {
+          winner = 'player';
+        } else if (updatedAI.hp > updatedPlayer.hp) {
+          winner = 'ai';
+        } else {
+          winner = null; // Draw
+        }
         phase = 'gameOver';
       } else if (updatedPlayer.hp <= 0) {
         winner = 'ai';
@@ -110,9 +116,28 @@ export function useGameState() {
       const nextPlayerOptions = getRandomAbilities(3);
       const nextAiOptions = getRandomAbilities(3);
       // Filter out duplicate AI actions for this turn
-      const filteredCombatLog = combatResult.battleLog.filter(
-        entry => !(entry.turn === gameState.currentTurn && entry.type === 'action' && entry.message.includes(gameState.players.ai.name))
+      // Only remove duplicate AI actions if there are more than one, but always keep the first
+      const aiActionsThisTurn = combatResult.battleLog.filter(
+        entry => entry.turn === gameState.currentTurn && entry.type === 'action' && entry.message.includes(gameState.players.ai.name)
       );
+      let filteredCombatLog = combatResult.battleLog;
+      if (aiActionsThisTurn.length > 1) {
+        let found = false;
+        filteredCombatLog = combatResult.battleLog.filter(entry => {
+          if (
+            entry.turn === gameState.currentTurn &&
+            entry.type === 'action' &&
+            entry.message.includes(gameState.players.ai.name)
+          ) {
+            if (!found) {
+              found = true;
+              return true; // keep the first
+            }
+            return false; // remove duplicates
+          }
+          return true;
+        });
+      }
       const finalBattleLog: BattleLogEntry[] = [
         ...gameState.battleLog,
         {
@@ -124,11 +149,19 @@ export function useGameState() {
         },
         ...filteredCombatLog,
       ];
-      if (winner) {
+      if (phase === 'gameOver') {
+        let gameOverMsg = '';
+        if (winner === 'player') {
+          gameOverMsg = 'Game Over! You win!';
+        } else if (winner === 'ai') {
+          gameOverMsg = 'Game Over! AI wins!';
+        } else {
+          gameOverMsg = 'Game Over! It\'s a draw!';
+        }
         finalBattleLog.push({
           id: `game-over-${gameState.currentTurn}`,
           turn: gameState.currentTurn,
-          message: `Game Over! ${winner === 'player' ? 'You win!' : 'AI wins!'}`,
+          message: gameOverMsg,
           type: 'system',
           timestamp: Date.now(),
         });

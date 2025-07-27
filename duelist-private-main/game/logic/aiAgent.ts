@@ -25,7 +25,11 @@ export async function getAgentMoveLLM(
   // Step 1: Ask LLM to pick the best ability
   const pickPrompt = `
 You are a strategic duelist AI. Your goal is to win the duel by making the smartest possible move each turn.
-Your current HP: ${safeAiHp}/${ai.maxHp}. Opponent HP: ${safePlayerHp}/${player.maxHp}.
+
+YOUR HP (AI): ${safeAiHp}/${ai.maxHp}
+OPPONENT HP (Player): ${safePlayerHp}/${player.maxHp}
+
+IMPORTANT: Always prioritize your own survival. If your HP is low, you must avoid risky or self-damaging moves unless it will guarantee a win. Only use self-damaging moves (like Berserker Rage) if it will immediately defeat the opponent or is the best possible option for survival. Do not use self-damaging moves if your HP is low and it could cause you to lose.
 
 ---
 ABILITY REFERENCE (latest rules):
@@ -49,11 +53,11 @@ Your previous moves: ${recentAIMoves || 'None'}
 Battle log so far:\n${battleLogSummary}
 
 INSTRUCTIONS:
-- Always consider your own HP, opponent's HP, and the available abilities.
-- If your HP is low (e.g., 5 or less), avoid risky or self-damaging moves (like Berserker Rage) unless it will guarantee a win.
-- Prioritize healing, blocking, or dodging when your HP is low.
+- Always consider YOUR HP (AI), OPPONENT HP (Player), and the available abilities.
+- If YOUR HP (AI) is low (e.g., 5 or less), avoid risky or self-damaging moves (like Berserker Rage) unless it will guarantee a win.
+- Prioritize healing, blocking, or dodging when YOUR HP (AI) is low.
 - Only use self-damaging or risky moves if you are sure it will defeat the opponent or is the best strategic option.
-- Pick the move that maximizes your chance to win and survive.
+- Pick the move that maximizes your chance to win and survive. Never use a move that would cause you to lose if you could survive by playing safer.
 
 Choose the best ability to win. Respond ONLY in valid JSON, with this format: { "abilityId": "..." }
 IMPORTANT: Respond with only the abilityId you select. Do not include any explanation or extra fields. Do not include any text outside the JSON object.
@@ -68,8 +72,8 @@ IMPORTANT: Respond with only the abilityId you select. Do not include any explan
       },
       body: JSON.stringify({
         messages: [{ role: 'user', content: pickPrompt }],
-        max_tokens: 1500,
-        model: "gpt-4",
+        max_tokens: 100,
+        model: "gpt-3.5-turbo",
         temperature: 0.7
       })
     });

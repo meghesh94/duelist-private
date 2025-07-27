@@ -99,7 +99,7 @@ export function resolveCombat(
       icon: 'zap',
     });
     playerResult = { damage: 0, heal: 0, selfDamage: 0, logs: [], selfStatusEffects: [], targetStatusEffects: [] };
-    // Always log the actual AI action used
+    // Always log the actual AI action used (fix: ensure this is always present)
     battleLog.push({
       id: `${turn}-ai-action-actual`,
       turn,
@@ -119,6 +119,7 @@ export function resolveCombat(
     if (playerResult.selfStatusEffects && playerResult.selfStatusEffects.length > 0) {
       player.statusEffects.push(...playerResult.selfStatusEffects);
     }
+    // Log the AI's action (always, for Game Over screen)
     battleLog.push({
       id: `${turn}-ai-action-actual`,
       turn,
@@ -549,11 +550,11 @@ function processAction(
     logs.push({
       id: `${turn}-${actorType}-rage-self`,
       turn,
-      message: `${actor.name} takes 3 damage from rage!`,
+      message: `${actor.name} takes 1 damage from rage!`,
       type: 'damage',
       timestamp: Date.now(),
     });
-    selfDamage += 3;
+    selfDamage += 1;
   }
 
   return { damage, logs, selfStatusEffects, targetStatusEffects, heal, selfDamage };
