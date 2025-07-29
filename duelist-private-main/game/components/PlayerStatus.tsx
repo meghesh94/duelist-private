@@ -13,12 +13,12 @@ export function PlayerStatus({ player, isAI }: PlayerStatusProps) {
   
   const getStatusIcon = (type: string) => {
     switch (type) {
-      case 'block': return Shield;
+      case 'block': return Zap;
       case 'stun': return Zap;
       case 'dodge': return Wind;
       case 'poison': return Droplets;
       case 'freeze': return Snowflake;
-      default: return Shield;
+      default: return Zap;
     }
   };
 

@@ -263,9 +263,11 @@ export function resolveCombat(
     });
   });
 
-  // Now apply new target status effects after end-of-turn effects
-  ai.statusEffects.push(...pendingPlayerTargetStatus);
-  player.statusEffects.push(...pendingAITargetStatus);
+  // Ensure target status effects are always applied to the correct target
+  // For player actions, playerResult.targetStatusEffects should go to ai
+  // For AI actions, aiResult.targetStatusEffects should go to player
+  ai.statusEffects.push(...playerResult.targetStatusEffects);
+  player.statusEffects.push(...aiResult.targetStatusEffects);
 
   // Clamp HP to maxHp after all effects
   player.hp = Math.max(0, Math.min(player.hp, player.maxHp));
@@ -382,7 +384,7 @@ function processAction(
     }
     case 'block': {
       const blockPower = isStunned ? Math.ceil(action.power / 2) : action.power;
-      const blockDuration = action.id === 'shield' ? 2 : 1;
+      const blockDuration = 1;
       selfStatusEffects.push({
         id: `block-${turn}`,
         name: 'Block',
@@ -434,6 +436,14 @@ function processAction(
           turn,
           message: `${actor.name} heals for ${damage} HP from drain!`,
           type: 'heal',
+          timestamp: Date.now(),
+        });
+      } else {
+        logs.push({
+          id: `${turn}-${actorType}-drain-blocked`,
+          turn,
+          message: `${actor.name}'s drain was blocked and no healing occurred!`,
+          type: 'status',
           timestamp: Date.now(),
         });
       }

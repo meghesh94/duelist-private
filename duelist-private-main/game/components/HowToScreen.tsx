@@ -20,7 +20,7 @@ export function HowToScreen({ onBack }: { onBack: () => void }) {
         - Dodge: Avoid all damage this turn.\n
         - Poison Strike: Deal 2 damage and poison for 2 damage/turn for 3 turns. Poison does not stack, but is refreshed if reapplied. Poison damage is applied at the end of each turn, starting from the next turn after application.\n
         - Berserker Rage: Deal 6 damage but take 1 self-damage.\n
-        - Magic Shield: Block all damage for 1 turn (2-turn cooldown).\n
+        // ...existing code...
         - Vampiric Strike: Deal 4 damage and heal for damage dealt.\n
         - Ice Shard: Deal 3 damage and freeze the enemy. Freeze blocks all healing for 1 turn, starting from the next turn after application.
       </Text>
@@ -34,7 +34,7 @@ export function HowToScreen({ onBack }: { onBack: () => void }) {
       </Text>
       <Text style={styles.sectionTitle}>Tips</Text>
       <Text style={styles.text}>
-        - Use Block, Dodge, or Magic Shield to avoid big attacks.\n
+        - Use Block or Dodge to avoid big attacks.\n
         - Heal and Drain can keep you alive longer.\n
         - Stun and Freeze can disrupt your opponent's plans.\n
         - Poison and Berserker Rage are best when you can finish the opponent quickly.\n

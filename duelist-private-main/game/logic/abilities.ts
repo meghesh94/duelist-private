@@ -74,14 +74,6 @@ export const ABILITIES: Ability[] = [
     power: 6,
   },
   {
-    id: 'shield',
-    name: 'Magic Shield',
-    description: 'Block all damage for 1 turn (2-turn cooldown).',
-    icon: 'shield',
-    type: 'block',
-    power: 999,
-  },
-  {
     id: 'lifesteal',
     name: 'Vampiric Strike',
     description: 'Deal 4 damage and heal for damage dealt.',

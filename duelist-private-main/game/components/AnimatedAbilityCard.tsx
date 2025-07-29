@@ -14,7 +14,7 @@ interface AnimatedAbilityCardProps {
 const iconMap = {
   sword: Sword,
   heart: Heart,
-  shield: Shield,
+  // ...existing code...
   zap: Zap,
   droplets: Droplets,
   flame: Flame,

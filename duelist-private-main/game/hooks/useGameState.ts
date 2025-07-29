@@ -115,40 +115,29 @@ export function useGameState() {
       }
       const nextPlayerOptions = getRandomAbilities(3);
       const nextAiOptions = getRandomAbilities(3);
-      // Filter out duplicate AI actions for this turn
-      // Only remove duplicate AI actions if there are more than one, but always keep the first
-      const aiActionsThisTurn = combatResult.battleLog.filter(
+      // Always ensure 'AI uses' and 'AI thought' are present as separate lines for this turn
+      const aiActionEntry = combatResult.battleLog.find(
         entry => entry.turn === gameState.currentTurn && entry.type === 'action' && entry.message.includes(gameState.players.ai.name)
       );
-      let filteredCombatLog = combatResult.battleLog;
-      if (aiActionsThisTurn.length > 1) {
-        let found = false;
-        filteredCombatLog = combatResult.battleLog.filter(entry => {
-          if (
-            entry.turn === gameState.currentTurn &&
-            entry.type === 'action' &&
-            entry.message.includes(gameState.players.ai.name)
-          ) {
-            if (!found) {
-              found = true;
-              return true; // keep the first
-            }
-            return false; // remove duplicates
-          }
-          return true;
-        });
-      }
+      const aiThoughtEntry: BattleLogEntry = {
+        id: `ai-thought-${gameState.currentTurn}`,
+        turn: gameState.currentTurn,
+        message: `AI thought: ${aiMove.thought}`,
+        type: 'system',
+        timestamp: Date.now(),
+      };
+      // Remove all AI action entries for this turn from combat log to avoid duplicates
+      const filteredCombatLog = combatResult.battleLog.filter(
+        entry => !(entry.turn === gameState.currentTurn && entry.type === 'action' && entry.message.includes(gameState.players.ai.name))
+      );
       const finalBattleLog: BattleLogEntry[] = [
         ...gameState.battleLog,
-        {
-          id: `ai-thought-${gameState.currentTurn}`,
-          turn: gameState.currentTurn,
-          message: `AI thought: ${aiMove.thought}`,
-          type: 'system',
-          timestamp: Date.now(),
-        },
+        ...(aiActionEntry ? [aiActionEntry] : []),
+        aiThoughtEntry,
         ...filteredCombatLog,
       ];
+      // Debug: print all log entries for this turn
+      console.log('Final Battle Log for turn', gameState.currentTurn, finalBattleLog.filter(e => e.turn === gameState.currentTurn));
       if (phase === 'gameOver') {
         let gameOverMsg = '';
         if (winner === 'player') {

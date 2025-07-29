@@ -48,7 +48,7 @@ export function EnhancedBattleLog({ entries, currentTurn }: EnhancedBattleLogPro
     switch (type) {
       case 'damage': return Sword;
       case 'heal': return Heart;
-      case 'status': return Shield;
+      case 'status': return AlertCircle;
       case 'system': return AlertCircle;
       default: return Zap;
     }
