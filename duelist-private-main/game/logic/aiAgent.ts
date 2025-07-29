@@ -76,7 +76,7 @@ Do not include explanations or extra fields. No other text is allowed.
 `;
   try {
     // Step 1: Pick the move
-    const response = await fetch('https://duelist-private.vercel.app/openai', {
+    const response = await fetch('https://duelist-private.onrender.com/openai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ Game state:
 IMPORTANT: You do NOT know what ability the opponent will use this turn. Do not reference or speculate about the opponent's next move. Only explain your own reasoning based on the current state.
 Explain in 1-2 sentences, in natural language, why you chose this move. Be concise and strategic.
 `;
-    const explainResponse = await fetch('https://duelist-private.vercel.app/openai', {
+    const explainResponse = await fetch('https://duelist-private.onrender.com/openai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
