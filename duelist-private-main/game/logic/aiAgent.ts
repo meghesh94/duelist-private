@@ -84,7 +84,7 @@ Do not include explanations or extra fields. No other text is allowed.
       body: JSON.stringify({
         messages: [{ role: 'user', content: pickPrompt }],
         max_tokens: 100,
-        model: "gpt-4",
+        model: "gpt-3.5-turbo",
         temperature: 0.7
       })
     });
