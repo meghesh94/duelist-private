@@ -446,6 +446,7 @@ function processAction(
           type: 'status',
           timestamp: Date.now(),
         });
+        heal = 0; // Explicitly set heal to 0 if drain is dodged or blocked
       }
       break;
     }
@@ -549,10 +550,7 @@ function processAction(
         type: 'status',
         timestamp: Date.now(),
       });
-      // Only set damage to 0 if fireball is targeting the player
-      if (actorType === 'ai') {
-        damage = 0;
-      }
+      damage = 0;
     }
   }
 
@@ -560,11 +558,11 @@ function processAction(
     logs.push({
       id: `${turn}-${actorType}-rage-self`,
       turn,
-      message: `${actor.name} takes 1 damage from rage!`,
+      message: `${actor.name} takes 2 damage from rage!`,
       type: 'damage',
       timestamp: Date.now(),
     });
-    selfDamage += 1;
+    selfDamage += 2;
   }
 
   return { damage, logs, selfStatusEffects, targetStatusEffects, heal, selfDamage };

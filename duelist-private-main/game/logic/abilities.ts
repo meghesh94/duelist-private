@@ -68,7 +68,7 @@ export const ABILITIES: Ability[] = [
   {
     id: 'rage',
     name: 'Berserker Rage',
-    description: 'Deal 6 damage but take 1 self-damage.',
+    description: 'Deal 6 damage but take 2 self-damage.',
     icon: 'sword',
     type: 'damage',
     power: 6,

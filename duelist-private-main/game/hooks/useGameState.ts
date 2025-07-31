@@ -10,8 +10,8 @@ const initialPlayer: Player = {
   id: 'player',
   name: 'Riven the Shadowblade',
   avatar: '🗡️',
-  hp: 20,
-  maxHp: 20,
+  hp: 30,
+  maxHp: 30,
   abilities: [],
   statusEffects: [],
 };
@@ -20,8 +20,8 @@ const initialAI: Player = {
   id: 'ai',
   name: 'Orion the Mind Engine',
   avatar: '🤖',
-  hp: 20,
-  maxHp: 20,
+  hp: 30,
+  maxHp: 30,
   abilities: [],
   statusEffects: [],
 };

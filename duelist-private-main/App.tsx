@@ -1,3 +1,8 @@
+import * as Clarity from '@microsoft/react-native-clarity';
+
+Clarity.initialize('smn5blm167', {
+  logLevel: Clarity.LogLevel.None, // Use LogLevel.Verbose for debugging
+});
 import React, { useEffect } from 'react';
 import { SafeAreaView, StyleSheet, StatusBar } from 'react-native';
 import { useGameState } from './game/hooks/useGameState';

@@ -20,18 +20,16 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
     setSelectedAbility(abilityId);
   };
 
-  const handleConfirmAction = () => {
-    if (selectedAbility) {
-      onSelectAbility(selectedAbility);
-      setSelectedAbility(null);
-    }
+  const handleConfirmAction = (abilityId: string) => {
+    onSelectAbility(abilityId);
+    setSelectedAbility(null);
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <Text style={styles.title}>⚔️ Battle in Progress</Text>
       <Text style={styles.turnText}>Turn {gameState.currentTurn}</Text>
-      
+
       <View style={styles.playersContainer}>
         <CharacterProfile
           character={playerCharacter}
@@ -47,31 +45,31 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
         />
       </View>
 
-      <EnhancedBattleLog 
-        entries={gameState.battleLog} 
+      <EnhancedBattleLog
+        entries={gameState.battleLog}
         currentTurn={gameState.currentTurn}
       />
 
       <View style={styles.abilitiesContainer}>
         <Text style={styles.abilitiesTitle}>Choose Your Action</Text>
-        
+
         <View style={styles.abilities}>
           {gameState.playerOptions.map((ability) => (
-            <AnimatedAbilityCard
-              key={ability.id}
-              ability={ability}
-              onPress={() => handleAbilitySelect(ability.id)}
-              selected={selectedAbility === ability.id}
-              disabled={gameState.players.player.statusEffects.some(e => e.type === 'stun')}
-            />
+            <View key={ability.id} style={{ width: '100%' }}>
+              <AnimatedAbilityCard
+                ability={ability}
+                onPress={() => handleAbilitySelect(ability.id)}
+                selected={selectedAbility === ability.id}
+                disabled={gameState.players.player.statusEffects.some(e => e.type === 'stun')}
+              />
+              {selectedAbility === ability.id && (
+                <TouchableOpacity style={styles.confirmButton} onPress={() => handleConfirmAction(ability.id)}>
+                  <Text style={styles.confirmText}>Execute Action</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           ))}
         </View>
-
-        {selectedAbility && (
-          <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmAction}>
-            <Text style={styles.confirmText}>Execute Action</Text>
-          </TouchableOpacity>
-        )}
       </View>
     </ScrollView>
   );
@@ -81,6 +79,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0F0F0F',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 32,
   },
   title: {
     color: '#FFFFFF',
@@ -102,9 +104,15 @@ const styles = StyleSheet.create({
   playersContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   abilitiesContainer: {
     padding: 16,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
   },
   abilitiesTitle: {
     color: '#FFFFFF',
@@ -115,18 +123,23 @@ const styles = StyleSheet.create({
   },
   abilities: {
     gap: 8,
+    width: '100%',
+    alignItems: 'center',
   },
   confirmButton: {
     backgroundColor: '#10B981',
     borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginTop: 8,
     alignItems: 'center',
     shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 8,
+    alignSelf: 'center',
+    minWidth: 120,
   },
   confirmText: {
     color: '#FFFFFF',
