@@ -67,7 +67,8 @@ Do not include explanations or extra fields. No other text is allowed.
 
   try {
     // Step 1: Pick the move
-    const response = await fetch('https://duelist-private.onrender.com/openai', {
+    const apiUrl = process.env.REACT_APP_API_URL || 'https://duelist-private.onrender.com/openai';
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ Do not include explanations or extra fields. No other text is allowed.
 
     // Step 2: Get explanation/thought
     const explainPrompt = `Explain why you chose the ability ${chosenAbility.name} (${chosenAbility.id}) in this situation. Be concise and strategic.`;
-    const explainResponse = await fetch('https://duelist-private.onrender.com/openai', {
+    const explainResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
