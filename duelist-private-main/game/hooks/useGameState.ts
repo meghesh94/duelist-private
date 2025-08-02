@@ -272,11 +272,17 @@ export function useGameState() {
     });
   }, [startGame]);
 
+  // Placeholder draftAbility function
+  const draftAbility = () => {
+    // TODO: implement draft logic
+  };
+
   return {
     gameState,
     startGame,
     selectAbility,
     resetGame,
+    draftAbility,
   };
 }
 
