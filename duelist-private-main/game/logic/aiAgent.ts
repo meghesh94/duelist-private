@@ -55,6 +55,7 @@ Opponent status: ${playerStatus}
 ---
 
 DECISION INSTRUCTIONS:
+- When making your decision, always compare YOUR HP to the PLAYER HP. If you have less HP than the player, consider defensive or healing moves. If you have more HP, you may play more aggressively, but always weigh the risks.
 - Factor in: YOUR HP, PLAYER HP, abilities available, and opponent status.
 - If YOUR HP is low (≤5), avoid risky/self-damaging moves unless they secure a win.
 - Never choose a move that leads to your defeat if a safer alternative exists.
