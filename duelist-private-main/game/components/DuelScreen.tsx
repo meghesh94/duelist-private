@@ -96,13 +96,16 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
     <>
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerRow}>
-          <Text style={styles.title}>⚔️ Shadow Duelist</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.headerSpacer} />
+          <View style={styles.headerTitleWrapper}>
+            <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">⚔️ Duelist</Text>
+          </View>
+          <View style={styles.headerIconsWrapper}>
             <TouchableOpacity style={styles.iconButton} onPress={() => setShowHelp(true)}>
-              <HelpCircle size={28} color="#F59E42" />
+              <HelpCircle size={22} color="#F59E42" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.battleLogButton} onPress={() => setShowBattleLog(true)}>
-              <ScrollIcon size={28} color="#F59E42" />
+              <ScrollIcon size={22} color="#F59E42" />
             </TouchableOpacity>
           </View>
         </View>
@@ -125,7 +128,7 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
         <Text style={styles.turnText}>Turn {gameState.currentTurn}</Text>
 
         <View style={[styles.playersContainer, isSmallScreen ? styles.playersContainerMobile : styles.playersContainerDesktop]}>
-          <View style={[styles.playerCardWrapper, isSmallScreen && { width: '100%' }]}> 
+          <View style={styles.playerCardWrapper}>
             <CharacterProfile
               character={playerCharacter}
               hp={gameState.players.player.hp}
@@ -133,7 +136,7 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
               statusEffects={gameState.players.player.statusEffects}
             />
           </View>
-          <View style={[styles.playerCardWrapper, isSmallScreen && { width: '100%' }]}> 
+          <View style={styles.playerCardWrapper}>
             <CharacterProfile
               character={aiCharacter}
               hp={gameState.players.ai.hp}
@@ -214,14 +217,23 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 28,
+    overflow: 'hidden',
     fontWeight: '800',
+    minHeight: 40,
+  },
+  title: {
     textAlign: 'center',
-    marginTop: 40,
-    marginBottom: 8,
     textShadowColor: '#EF4444',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
+    includeFontPadding: false,
+    color: '#FFFFFF',
+    fontSize: 18,
+    maxWidth: '80%',
+    overflow: 'hidden',
+    fontWeight: '800',
+    flexShrink: 1,
+    flexGrow: 1,
   },
   turnText: {
     color: '#D1D5DB',
@@ -231,8 +243,11 @@ const styles = StyleSheet.create({
   },
   playersContainer: {
     width: '100%',
-    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
+    alignItems: 'stretch',
     marginBottom: 8,
+    paddingHorizontal: 0,
   },
   playersContainerDesktop: {
     flexDirection: 'row',
@@ -244,17 +259,17 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   playersContainerMobile: {
-    flexDirection: 'column',
-    gap: 12,
-    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    flexWrap: 'nowrap',
     width: '100%',
+    gap: 8,
+    marginBottom: 8,
   },
   playerCardWrapper: {
     flex: 1,
-    minWidth: 160,
-    maxWidth: 340,
-    alignItems: 'center',
-    marginHorizontal: 4,
+    alignItems: 'stretch',
   },
   abilitiesContainer: {
     padding: 16,
@@ -298,11 +313,32 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     width: '100%',
     marginTop: 40,
     marginBottom: 8,
     paddingHorizontal: 8,
+    position: 'relative',
+  },
+  headerSpacer: {
+    flex: 1,
+    minWidth: 0,
+  },
+  headerTitleWrapper: {
+    flex: 2,
+    minWidth: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  headerIconsWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1,
+    minWidth: 0,
+    gap: 0,
+    zIndex: 2,
   },
   battleLogButton: {
     padding: 6,
@@ -310,7 +346,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
+    marginLeft: 2,
   },
   iconButton: {
     padding: 6,
@@ -318,7 +354,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
+    marginLeft: 0,
   },
   battleLogModalOverlay: {
     flex: 1,

@@ -20,20 +20,24 @@ export function DraftScreen({ gameState, onDraftAbility }: DraftScreenProps) {
       <Text style={styles.subtitle}>The shadows await your choice...</Text>
       
       <View style={styles.playersContainer}>
-        <CharacterProfile
-          character={playerCharacter}
-          hp={gameState.players.player.hp}
-          maxHp={gameState.players.player.maxHp}
-          statusEffects={gameState.players.player.statusEffects}
-          showFlavorText={gameState.players.player.abilities.length === 0}
-        />
-        <CharacterProfile
-          character={aiCharacter}
-          hp={gameState.players.ai.hp}
-          maxHp={gameState.players.ai.maxHp}
-          statusEffects={gameState.players.ai.statusEffects}
-          showFlavorText={gameState.players.ai.abilities.length === 0}
-        />
+        <View style={styles.playerCardWrapper}>
+          <CharacterProfile
+            character={playerCharacter}
+            hp={gameState.players.player.hp}
+            maxHp={gameState.players.player.maxHp}
+            statusEffects={gameState.players.player.statusEffects}
+            showFlavorText={gameState.players.player.abilities.length === 0}
+          />
+        </View>
+        <View style={styles.playerCardWrapper}>
+          <CharacterProfile
+            character={aiCharacter}
+            hp={gameState.players.ai.hp}
+            maxHp={gameState.players.ai.maxHp}
+            statusEffects={gameState.players.ai.statusEffects}
+            showFlavorText={gameState.players.ai.abilities.length === 0}
+          />
+        </View>
       </View>
 
       <View style={styles.draftContainer}>
@@ -96,6 +100,15 @@ const styles = StyleSheet.create({
   playersContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    flexWrap: 'nowrap',
+    marginBottom: 8,
+    gap: 8,
+  },
+  playerCardWrapper: {
+    flex: 1,
+    minWidth: 0,
+    maxWidth: '48%',
   },
   draftContainer: {
     padding: 16,

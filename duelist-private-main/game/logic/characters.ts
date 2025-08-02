@@ -4,7 +4,7 @@ export const CHARACTERS: Record<'player' | 'ai', Character> = {
   player: {
     id: 'player',
     name: 'Riven',
-    title: 'the Shadowblade',
+    title: 'the Shadow Blade',
     avatar: '🗡️',
     description: 'A master assassin who strikes from the shadows with deadly precision.',
     primaryColor: '#6B46C1',
