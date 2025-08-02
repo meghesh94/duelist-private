@@ -49,10 +49,7 @@ const initialGameState: GameState = {
 export function useGameState() {
   const [gameState, setGameState] = useState<GameState>(initialGameState);
 
-  // Removed misplaced setGameState block
   const selectAbility = useCallback(async (abilityId: string) => {
-    // Optionally show loading in UI via a separate state if needed
-    // If player is stunned, skip their move and only let AI act
     const isPlayerStunned = gameState.players.player.statusEffects.some(e => e.type === 'stun');
     let aiMove: { abilityId: string, thought: string };
     if (isPlayerStunned) {
@@ -64,7 +61,6 @@ export function useGameState() {
         gameState.battleLog
       );
       const aiAbility = gameState.aiOptions.find(a => a.id === aiMove.abilityId) || gameState.aiOptions[0];
-      // Use fresh copies for combat
       const playerCopy = { ...gameState.players.player };
       const aiCopy = { ...gameState.players.ai };
       const combatResult = resolveCombat(
@@ -76,10 +72,8 @@ export function useGameState() {
         aiAbility.id,
         gameState.currentTurn
       );
-      // Only update status effect durations after combat
       let updatedPlayer = updateStatusEffects(playerCopy);
       let updatedAI = updateStatusEffects(aiCopy);
-      // Clamp HP to maxHp after all updates
       updatedPlayer.hp = Math.min(updatedPlayer.hp, updatedPlayer.maxHp);
       updatedAI.hp = Math.min(updatedAI.hp, updatedAI.maxHp);
       let winner: 'player' | 'ai' | null = null;
@@ -90,7 +84,7 @@ export function useGameState() {
         } else if (updatedAI.hp > updatedPlayer.hp) {
           winner = 'ai';
         } else {
-          winner = null; // Draw
+          winner = null;
         }
         phase = 'gameOver';
       } else if (updatedPlayer.hp <= 0) {
@@ -102,7 +96,6 @@ export function useGameState() {
       }
       const nextPlayerOptions = getRandomAbilities(3);
       const nextAiOptions = getRandomAbilities(3);
-      // Always ensure 'AI uses' and 'AI thought' are present as separate lines for this turn
       const aiActionEntry = combatResult.battleLog.find(
         entry => entry.turn === gameState.currentTurn && entry.type === 'action' && entry.message.includes(gameState.players.ai.name)
       );
@@ -113,7 +106,6 @@ export function useGameState() {
         type: 'system',
         timestamp: Date.now(),
       };
-      // Remove all AI action entries for this turn from combat log to avoid duplicates
       const filteredCombatLog = combatResult.battleLog.filter(
         entry => !(entry.turn === gameState.currentTurn && entry.type === 'action' && entry.message.includes(gameState.players.ai.name))
       );
@@ -123,8 +115,6 @@ export function useGameState() {
         aiThoughtEntry,
         ...filteredCombatLog,
       ];
-      // Debug: print all log entries for this turn
-      console.log('Final Battle Log for turn', gameState.currentTurn, finalBattleLog.filter(e => e.turn === gameState.currentTurn));
       if (phase === 'gameOver') {
         let gameOverMsg = '';
         if (winner === 'player') {
@@ -160,10 +150,8 @@ export function useGameState() {
       });
       return;
     }
-    // Normal turn: player acts, AI uses LLM
     const playerAbility = gameState.playerOptions.find(a => a.id === abilityId);
     if (!playerAbility) return;
-    // Remove current turn's player action from battleLog for AI move selection
     const battleLogForAI = gameState.battleLog.filter(
       entry => !(entry.turn === gameState.currentTurn && entry.type === 'action' && entry.message.includes(gameState.players.player.name))
     );
@@ -175,7 +163,6 @@ export function useGameState() {
       battleLogForAI
     );
     const aiAbility = gameState.aiOptions.find(a => a.id === aiMove.abilityId) || gameState.aiOptions[0];
-    // Use fresh copies for combat
     const playerCopy = { ...gameState.players.player };
     const aiCopy = { ...gameState.players.ai };
     const combatResult = resolveCombat(
@@ -187,10 +174,8 @@ export function useGameState() {
       aiAbility.id,
       gameState.currentTurn
     );
-    // Only update status effect durations after combat
     let updatedPlayer = updateStatusEffects(playerCopy);
     let updatedAI = updateStatusEffects(aiCopy);
-    // Clamp HP to maxHp after all updates
     updatedPlayer.hp = Math.min(updatedPlayer.hp, updatedPlayer.maxHp);
     updatedAI.hp = Math.min(updatedAI.hp, updatedAI.maxHp);
     let winner: 'player' | 'ai' | null = null;
@@ -207,7 +192,6 @@ export function useGameState() {
     }
     const nextPlayerOptions = getRandomAbilities(3);
     const nextAiOptions = getRandomAbilities(3);
-    // Remove any duplicate AI actions from combatResult.battleLog for this turn
     const filteredCombatLog = combatResult.battleLog.filter(
       entry => !(entry.turn === gameState.currentTurn && entry.type === 'action' && entry.message.includes(gameState.players.ai.name))
     );
@@ -269,7 +253,6 @@ export function useGameState() {
 
   const resetGame = startGame;
 
-  // Placeholder draftAbility function
   const draftAbility = () => {
     // TODO: implement draft logic
   };
