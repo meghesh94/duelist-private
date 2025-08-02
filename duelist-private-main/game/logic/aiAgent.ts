@@ -67,7 +67,7 @@ Do not include explanations or extra fields. No other text is allowed.
 
   try {
     // Step 1: Pick the move
-    const response = await fetch('http://localhost:3001/openai', {
+    const response = await fetch('https://duelist-private.onrender.com/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
