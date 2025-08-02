@@ -75,10 +75,11 @@ export function GameOverScreen({ gameState, onRestart }: GameOverScreenProps) {
           <Text style={styles.restartText}>Play Again</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    {/* End main container View */}
 
     </View>
   );
+}
 
 const styles = StyleSheet.create({
   container: {
