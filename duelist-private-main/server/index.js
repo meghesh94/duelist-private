@@ -4,11 +4,25 @@ console.log('OPENAI_API_KEY at startup:', process.env.OPENAI_API_KEY);
 const express = require('express');
 const cors = require('cors');
 
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Allow both local and production frontends
+const allowedOrigins = [
+  'http://localhost:8081',
+  'https://duelist-app-indol.vercel.app',
+];
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
 }));
 app.use(express.json());
 

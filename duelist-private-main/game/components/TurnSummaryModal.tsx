@@ -25,9 +25,11 @@ export function TurnSummaryModal(props: TurnSummaryProps) {
   const playerChar = getCharacter('player');
   const aiChar = getCharacter('ai');
 
-  // Use final HP if available, else current
-  const playerHp = calculation.playerFinalHp ?? player.hp;
-  const aiHp = calculation.aiFinalHp ?? ai.hp;
+  // Use final HP if available, else current, and clamp to maxHp
+  const playerHpRaw = calculation.playerFinalHp ?? player.hp;
+  const aiHpRaw = calculation.aiFinalHp ?? ai.hp;
+  const playerHp = Math.min(playerHpRaw, player.maxHp);
+  const aiHp = Math.min(aiHpRaw, ai.maxHp);
 
   // Extract hit/miss for fireball for both player and AI from calculation.summary
   function getFireballStatus(actor: 'player' | 'ai') {
