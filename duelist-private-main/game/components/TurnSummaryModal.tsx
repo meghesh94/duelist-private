@@ -47,32 +47,17 @@ export function TurnSummaryModal(props: TurnSummaryProps) {
   const playerFireballStatus = playerAbility && playerAbility.id === 'fireball' ? getFireballStatus('player') : undefined;
   const aiFireballStatus = aiAbility && aiAbility.id === 'fireball' ? getFireballStatus('ai') : undefined;
 
-  // Streaming AI thought logic
-  const [streamedThought, setStreamedThought] = useState('');
-  const aiReasonRef = useRef('');
-  useEffect(() => {
-    let aiReason = aiThought;
-    if (aiReason) {
-      aiReason = aiReason.replace(/^I chose to use the ability [^-–:]+[-–:]+/i, '');
-      aiReason = aiReason.replace(/^I chose the ability [^-–:]+(because|to|with|using)?/i, '');
-      aiReason = aiReason.replace(/^Used [^-–:]+(because|to|with|using)?/i, '');
-      aiReason = aiReason.replace(/^[^:]+:/, '');
-      aiReason = aiReason.replace(/^(because|to|with|using)\s*/i, '');
-      aiReason = aiReason.trim();
-      if (aiReason.length > 0) aiReason = aiReason.charAt(0).toUpperCase() + aiReason.slice(1);
-    }
-    aiReasonRef.current = aiReason || '';
-    setStreamedThought('');
-    if (aiReasonRef.current) {
-      let i = 0;
-      const interval = setInterval(() => {
-        setStreamedThought(aiReasonRef.current.slice(0, i + 1));
-        i++;
-        if (i >= aiReasonRef.current.length) clearInterval(interval);
-      }, 18); // ~55 chars/sec
-      return () => clearInterval(interval);
-    }
-  }, [aiThought]);
+  // Direct AI thought (no streaming)
+  let aiReason = aiThought;
+  if (aiReason) {
+    aiReason = aiReason.replace(/^I chose to use the ability [^-–:]+[-–:]+/i, '');
+    aiReason = aiReason.replace(/^I chose the ability [^-–:]+(because|to|with|using)?/i, '');
+    aiReason = aiReason.replace(/^Used [^-–:]+(because|to|with|using)?/i, '');
+    aiReason = aiReason.replace(/^[^:]+:/, '');
+    aiReason = aiReason.replace(/^(because|to|with|using)\s*/i, '');
+    aiReason = aiReason.trim();
+    if (aiReason.length > 0) aiReason = aiReason.charAt(0).toUpperCase() + aiReason.slice(1);
+  }
 
   return (
     <View style={styles.overlay}>
@@ -108,11 +93,11 @@ export function TurnSummaryModal(props: TurnSummaryProps) {
                 </View>
               </View>
             </View>
-            {streamedThought ? (
+            {aiReason ? (
               <View style={styles.aiChatRow}>
                 <Text style={styles.avatar}>{aiChar.avatar}</Text>
                 <View style={styles.aiChatBubble}>
-                  <Text style={styles.thoughtText}>{streamedThought}</Text>
+                  <Text style={styles.thoughtText}>{aiReason}</Text>
                   <View style={styles.aiChatTail} />
                 </View>
               </View>
@@ -146,11 +131,11 @@ export function TurnSummaryModal(props: TurnSummaryProps) {
                 <AbilityCard ability={aiAbility} compact status={aiFireballStatus} />
               </View>
             </View>
-            {streamedThought ? (
+            {aiReason ? (
               <View style={styles.aiChatRow}>
                 <Text style={styles.avatar}>{aiChar.avatar}</Text>
                 <View style={styles.aiChatBubble}>
-                  <Text style={styles.thoughtText}>{streamedThought}</Text>
+                  <Text style={styles.thoughtText}>{aiReason}</Text>
                   <View style={styles.aiChatTail} />
                 </View>
               </View>

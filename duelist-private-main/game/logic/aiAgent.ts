@@ -99,8 +99,8 @@ Do not include explanations or extra fields. No other text is allowed.
     // Find the chosen ability object
     const chosenAbility = aiOptions.find(a => a.id === abilityId) || aiOptions[0];
 
-    // Step 2: Get explanation/thought
-    const explainPrompt = `Explain why you chose the ability ${chosenAbility.name} (${chosenAbility.id}) in this situation. Be concise and strategic.`;
+    // Step 2: Get concise explanation/thought
+    const explainPrompt = `In one short sentence, explain why you chose the ability ${chosenAbility.name} (${chosenAbility.id}) in this situation. Be as brief and strategic as possible.`;
     const explainResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -108,18 +108,16 @@ Do not include explanations or extra fields. No other text is allowed.
       },
       body: JSON.stringify({
         messages: [{ role: 'user', content: explainPrompt }],
-        max_tokens: 1500,
+        max_tokens: 60,
         model: "gpt-3.5-turbo",
         temperature: 0.7
       })
     });
     const explainData = await explainResponse.json();
-    let llmThought = '';
+    let thought = '';
     if (explainData.choices && explainData.choices[0] && explainData.choices[0].message && explainData.choices[0].message.content) {
-      llmThought = explainData.choices[0].message.content.trim();
+      thought = explainData.choices[0].message.content.trim();
     }
-    // Always enforce the thought to start with the correct ability used
-    const thought = `I chose to use the ability "${chosenAbility.name}" (${chosenAbility.id})${llmThought ? ' - ' + llmThought : ''}`;
     console.log(`AI Used: ${chosenAbility.name} (${chosenAbility.id}) | Thought: ${thought}`);
     return { abilityId: chosenAbility.id, thought, abilityName: chosenAbility.name };
   } catch (err) {
