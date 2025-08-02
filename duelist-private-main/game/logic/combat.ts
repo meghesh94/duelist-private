@@ -26,6 +26,47 @@ export function resolveCombat(
     throw new Error('Selected ability not found in options');
   }
 
+
+  // --- Apply dodge and block status effects before resolving actions ---
+  if (playerAction.type === 'dodge') {
+    player.statusEffects.push({
+      id: `dodge-${turn}`,
+      name: 'Dodge',
+      type: 'dodge',
+      duration: 1,
+      icon: 'wind',
+    });
+  }
+  if (playerAction.type === 'block') {
+    player.statusEffects.push({
+      id: `block-${turn}`,
+      name: 'Block',
+      type: 'block',
+      duration: 1,
+      icon: 'shield',
+      power: playerAction.power,
+    });
+  }
+  if (aiAction.type === 'dodge') {
+    ai.statusEffects.push({
+      id: `dodge-${turn}`,
+      name: 'Dodge',
+      type: 'dodge',
+      duration: 1,
+      icon: 'wind',
+    });
+  }
+  if (aiAction.type === 'block') {
+    ai.statusEffects.push({
+      id: `block-${turn}`,
+      name: 'Block',
+      type: 'block',
+      duration: 1,
+      icon: 'shield',
+      power: aiAction.power,
+    });
+  }
+
   // Process both actions, collect status effects first
   let playerResult, aiResult;
   // First, process both actions to see if either is a stun
@@ -34,7 +75,7 @@ export function resolveCombat(
   if (playerAction.type === 'stun') playerStunsAI = true;
   if (aiAction.type === 'stun') aiStunsPlayer = true;
 
-  // Check if either player is dodging
+  // Check if either player is dodging (for logic below)
   const playerDodges = playerAction.type === 'dodge';
   const aiDodges = aiAction.type === 'dodge';
 
@@ -393,6 +434,22 @@ function processAction(
 
   switch (action.type) {
     case 'damage': {
+      // Special case: fireball has a 50% chance to miss (unless target is stunned)
+      if (action.id === 'fireball') {
+        const targetStunned = target.statusEffects.some(effect => effect.type === 'stun');
+        const missChance = targetStunned ? 0 : 0.5;
+        if (Math.random() < missChance) {
+          logs.push({
+            id: `${turn}-${actorType}-fireball-miss`,
+            turn,
+            message: `${actor.name}'s fireball misses!`,
+            type: 'status',
+            timestamp: Date.now(),
+          });
+          damage = 0;
+          break;
+        }
+      }
       const baseDamage = isStunned ? Math.ceil(action.power / 2) : action.power;
       damage = calculateDamage(baseDamage, target);
       if (damage <= 0) {
@@ -440,15 +497,25 @@ function processAction(
     }
     case 'stun': {
       // Stun now cancels the opponent's action this turn, not next turn
-      // Only apply damage if stun has power
+      // Block does NOT reduce stun damage. Only dodge avoids it.
       if (action.power && action.power > 0) {
-        damage = calculateDamage(isStunned ? Math.ceil(action.power / 2) : action.power, target);
+        // If target is dodging, no damage
+        const isDodging = target.statusEffects.some(effect => effect.type === 'dodge');
+        damage = isDodging ? 0 : (isStunned ? Math.ceil(action.power / 2) : action.power);
         if (damage > 0) {
           logs.push({
             id: `${turn}-${actorType}-stun-damage`,
             turn,
             message: `${target.name} takes ${damage} damage from the stun attack!`,
             type: 'damage',
+            timestamp: Date.now(),
+          });
+        } else if (isDodging) {
+          logs.push({
+            id: `${turn}-${actorType}-stun-dodged`,
+            turn,
+            message: `${target.name} dodges the stun attack!`,
+            type: 'status',
             timestamp: Date.now(),
           });
         }
@@ -575,21 +642,6 @@ function processAction(
   }
 
   // Handle special ability effects after main logic
-  if (action.id === 'fireball') {
-    const targetStunned = target.statusEffects.some(effect => effect.type === 'stun');
-    const missChance = targetStunned ? 0 : 0.5;
-    if (Math.random() < missChance) {
-      logs.push({
-        id: `${turn}-${actorType}-fireball-miss`,
-        turn,
-        message: `${actor.name}'s fireball misses!`,
-        type: 'status',
-        timestamp: Date.now(),
-      });
-      damage = 0;
-    }
-  }
-
   if (action.id === 'rage') {
     logs.push({
       id: `${turn}-${actorType}-rage-self`,

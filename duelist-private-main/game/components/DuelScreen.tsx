@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Modal } from 'react-native';
-import { Scroll as ScrollIcon } from 'lucide-react-native';
+import { Scroll as ScrollIcon, HelpCircle } from 'lucide-react-native';
+import { HelpModalContent } from './HelpModalContent';
 import { AnimatedAbilityCard } from './AnimatedAbilityCard';
 import { CharacterProfile } from './CharacterProfile';
 import { EnhancedBattleLog } from './EnhancedBattleLog';
@@ -26,6 +27,7 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
   }>({ playerAbility: null, aiAbility: null, aiThought: '', calculation: { summary: '' } });
   const [pendingNextTurn, setPendingNextTurn] = useState(false);
   const [showBattleLog, setShowBattleLog] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const playerCharacter = getCharacter('player');
   const aiCharacter = getCharacter('ai');
@@ -94,11 +96,32 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
     <>
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerRow}>
-          <Text style={styles.title}>⚔️ Battle in Progress</Text>
-          <TouchableOpacity style={styles.battleLogButton} onPress={() => setShowBattleLog(true)}>
-            <ScrollIcon size={28} color="#F59E42" />
-          </TouchableOpacity>
+          <Text style={styles.title}>⚔️ Shadow Duelist</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => setShowHelp(true)}>
+              <HelpCircle size={28} color="#F59E42" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.battleLogButton} onPress={() => setShowBattleLog(true)}>
+              <ScrollIcon size={28} color="#F59E42" />
+            </TouchableOpacity>
+          </View>
         </View>
+      {/* Help Modal */}
+      <Modal
+        visible={showHelp}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowHelp(false)}
+      >
+        <View style={styles.battleLogModalOverlay}>
+          <View style={[styles.battleLogModalContent, { maxWidth: 600, minWidth: 320 }]}> 
+            <TouchableOpacity style={styles.battleLogCloseButton} onPress={() => setShowHelp(false)}>
+              <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>✕</Text>
+            </TouchableOpacity>
+            <HelpModalContent />
+          </View>
+        </View>
+      </Modal>
         <Text style={styles.turnText}>Turn {gameState.currentTurn}</Text>
 
         <View style={[styles.playersContainer, isSmallScreen ? styles.playersContainerMobile : styles.playersContainerDesktop]}>
@@ -282,6 +305,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   battleLogButton: {
+    padding: 6,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  iconButton: {
     padding: 6,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.04)',
