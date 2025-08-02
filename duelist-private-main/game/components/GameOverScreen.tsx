@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Trophy, RotateCcw } from 'lucide-react-native';
 import { GameState } from '../../types/game';
 
@@ -24,58 +24,61 @@ export function GameOverScreen({ gameState, onRestart }: GameOverScreenProps) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.resultContainer}>
-        <Trophy
-          size={80}
-          color={isVictory ? '#F59E0B' : '#6B7280'}
-          strokeWidth={2}
-        />
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={styles.resultContainer}>
+          <Trophy
+            size={80}
+            color={isVictory ? '#F59E0B' : '#6B7280'}
+            strokeWidth={2}
+          />
 
-        <Text style={[styles.resultTitle, isVictory ? styles.victory : styles.defeat]}>
-          {gameState.winner === null ? 'DRAW!' : isVictory ? 'VICTORY!' : 'DEFEAT!'}
-        </Text>
+          <Text style={[styles.resultTitle, isVictory ? styles.victory : styles.defeat]}>
+            {gameState.winner === null ? 'DRAW!' : isVictory ? 'VICTORY!' : 'DEFEAT!'}
+          </Text>
 
-        <Text style={styles.resultMessage}>
-          {gameState.winner === null
-            ? "Neither duelist prevailed. It's a draw!"
-            : isVictory
-            ? 'You have mastered the shadow arts!'
-            : 'The shadows have claimed another soul...'}
-        </Text>
+          <Text style={styles.resultMessage}>
+            {gameState.winner === null
+              ? "Neither duelist prevailed. It's a draw!"
+              : isVictory
+              ? 'You have mastered the shadow arts!'
+              : 'The shadows have claimed another soul...'}
+          </Text>
 
-        <View style={styles.finalStats}>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Final HP:</Text>
+          <View style={styles.finalStats}>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Final HP:</Text>
+              <Text style={styles.statValue}>
+                🧙 {gameState.players.player.hp} | 🤖 {gameState.players.ai.hp}
+              </Text>
+            </View>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Turns Survived:</Text>
+              <Text style={styles.statValue}>{lastTurn}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.finalStats, { marginTop: 20 }]}> 
+            <Text style={[styles.statLabel, { marginBottom: 8, fontWeight: 'bold', fontSize: 18 }]}>Last Turn Recap</Text>
+            <Text style={[styles.statLabel, { marginTop: 8 }]}>Effects:</Text>
+            {lastTurnEffects.length > 0 ? lastTurnEffects.map((entry, idx) => (
+              <Text key={idx} style={styles.statValue}>- {entry.message}</Text>
+            )) : <Text style={styles.statValue}>No effects</Text>}
+            <Text style={[styles.statLabel, { marginTop: 8 }]}>AI Thought:</Text>
             <Text style={styles.statValue}>
-              🧙 {gameState.players.player.hp} | 🤖 {gameState.players.ai.hp}
+              {aiThoughtEntry ? aiThoughtEntry.message.replace('AI thought: ', '') : 'N/A'}
             </Text>
           </View>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Turns Survived:</Text>
-            <Text style={styles.statValue}>{lastTurn}</Text>
-          </View>
         </View>
 
-        <View style={[styles.finalStats, { marginTop: 20 }]}> 
-          <Text style={[styles.statLabel, { marginBottom: 8, fontWeight: 'bold', fontSize: 18 }]}>Last Turn Recap</Text>
-          <Text style={[styles.statLabel, { marginTop: 8 }]}>Effects:</Text>
-          {lastTurnEffects.length > 0 ? lastTurnEffects.map((entry, idx) => (
-            <Text key={idx} style={styles.statValue}>- {entry.message}</Text>
-          )) : <Text style={styles.statValue}>No effects</Text>}
-          <Text style={[styles.statLabel, { marginTop: 8 }]}>AI Thought:</Text>
-          <Text style={styles.statValue}>
-            {aiThoughtEntry ? aiThoughtEntry.message.replace('AI thought: ', '') : 'N/A'}
-          </Text>
-        </View>
-      </View>
+        <TouchableOpacity style={styles.restartButton} onPress={onRestart}>
+          <RotateCcw size={24} color="#FFFFFF" strokeWidth={2} />
+          <Text style={styles.restartText}>Play Again</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
 
-      <TouchableOpacity style={styles.restartButton} onPress={onRestart}>
-        <RotateCcw size={24} color="#FFFFFF" strokeWidth={2} />
-        <Text style={styles.restartText}>Play Again</Text>
-      </TouchableOpacity>
     </View>
   );
-}
 
 const styles = StyleSheet.create({
   container: {
