@@ -1,78 +1,10 @@
 import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
-import { Sword, Heart, Shield, Zap, Wind, Droplets, Flame } from 'lucide-react-native';
+import { Sword, Heart, Shield, Zap, Wind, Droplets, Flame, Snowflake } from 'lucide-react-native';
 import { Ability } from '../../types/game';
-
-interface AbilityCardProps {
-  ability: Ability;
-  onPress?: () => void;
-  selected?: boolean;
-  disabled?: boolean;
-  compact?: boolean;
-}
-
-const iconMap = {
-  sword: Sword,
-  heart: Heart,
-  // ...existing code...
-  zap: Zap,
-  droplets: Droplets,
-  flame: Flame,
-  wind: Wind,
-  snowflake: Zap, // Using Zap as placeholder for snowflake
-};
-
-export function AbilityCard({ ability, onPress, selected, disabled, compact }: AbilityCardProps) {
-  const IconComponent = iconMap[ability.icon as keyof typeof iconMap] || Sword;
-  
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'damage': return '#EF4444';
-      case 'heal': return '#10B981';
-      case 'block': return '#6B7280';
-      case 'stun': return '#8B5CF6';
-      case 'dodge': return '#06B6D4';
-      case 'drain': return '#EC4899';
-      case 'poison': return '#22C55E';
-      case 'freeze': return '#3B82F6';
-      default: return '#F59E0B';
-    }
-  };
-
-  return (
-    <TouchableOpacity
-      style={[
-        styles.card,
-        compact && styles.compactCard,
-        selected && styles.selected,
-        disabled && styles.disabled,
-        { borderColor: getTypeColor(ability.type) }
-      ]}
-      onPress={onPress}
-      disabled={disabled}
-      activeOpacity={0.8}
-    >
-      <View style={styles.header}>
-        <IconComponent
-          size={compact ? 16 : 24}
-          color={getTypeColor(ability.type)}
-          strokeWidth={2}
-        />
-        <Text style={[styles.name, compact && styles.compactName]}>{ability.name}</Text>
-        <View style={[styles.powerBadge, { backgroundColor: getTypeColor(ability.type) }]}>
-          <Text style={styles.power}>{ability.power}</Text>
-        </View>
-      </View>
-      {!compact && (
-        <Text style={styles.description}>{ability.description}</Text>
-      )}
-    </TouchableOpacity>
-  );
-}
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1F1F23',
     borderRadius: 12,
     borderWidth: 2,
     padding: 16,
@@ -128,4 +60,87 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  status: {
+    fontWeight: 'bold',
+    fontSize: 13,
+    marginTop: 2,
+    marginBottom: 2,
+    alignSelf: 'center',
+    letterSpacing: 1,
+  },
+  statusHit: {
+    color: '#10B981',
+  },
+  statusMiss: {
+    color: '#EF4444',
+  },
 });
+
+export function AbilityCard(props: {
+  ability: Ability;
+  compact?: boolean;
+  selected?: boolean;
+  disabled?: boolean;
+  onPress?: () => void;
+  status?: 'Hit' | 'Miss';
+}) {
+  const { ability, compact, selected, disabled, onPress, status } = props;
+
+  // Icon selection logic based on ability.icon property
+  const getAbilityIcon = (icon: string) => {
+    switch (icon) {
+      case 'sword': return <Sword size={18} color={getTypeColor(ability.type)} />;
+      case 'heart': return <Heart size={18} color={getTypeColor(ability.type)} />;
+      case 'shield': return <Shield size={18} color={getTypeColor(ability.type)} />;
+      case 'zap': return <Zap size={18} color={getTypeColor(ability.type)} />;
+      case 'wind': return <Wind size={18} color={getTypeColor(ability.type)} />;
+      case 'droplets': return <Droplets size={18} color={getTypeColor(ability.type)} />;
+      case 'flame': return <Flame size={18} color={getTypeColor(ability.type)} />;
+      case 'snowflake': return <Snowflake size={18} color={getTypeColor(ability.type)} />;
+      default: return null;
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'damage': return '#F59E42';
+      case 'heal': return '#10B981';
+      case 'block': return '#60A5FA';
+      case 'stun': return '#FBBF24';
+      case 'dodge': return '#38BDF8';
+      case 'drain': return '#3B82F6';
+      case 'poison': return '#A3E635';
+      case 'freeze': return '#60A5FA';
+      default: return '#A1A1AA';
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.card,
+        { backgroundColor: getTypeColor(ability.type) + '22', borderColor: getTypeColor(ability.type) },
+        compact && styles.compactCard,
+        selected && styles.selected,
+        disabled && styles.disabled,
+      ]}
+      disabled={disabled}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      <View style={styles.header}>
+        {getAbilityIcon(ability.icon)}
+        <Text style={[styles.name, compact && styles.compactName]}>{ability.name}</Text>
+        <View style={[styles.powerBadge, { backgroundColor: getTypeColor(ability.type) }]}> 
+          <Text style={[styles.power, { color: '#fff', textShadowColor: getTypeColor(ability.type), textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }]}>{ability.power}</Text>
+        </View>
+      </View>
+      {status && (
+        <Text style={[styles.status, status === 'Hit' ? styles.statusHit : styles.statusMiss]}>{status}</Text>
+      )}
+      {!compact && (
+        <Text style={styles.description}>{ability.description}</Text>
+      )}
+    </TouchableOpacity>
+  );
+}

@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors({
-  origin: 'https://duelist-app-indol.vercel.app',
+  origin: 'http://localhost:8081',
 }));
 app.use(express.json());
 

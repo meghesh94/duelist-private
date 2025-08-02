@@ -34,12 +34,28 @@ export function getAIDecision(
     analysis = "Player is at low HP - going for the finishing blow.";
     reasoning = "When opponent is vulnerable, aggressive play maximizes win probability.";
     confidence = 0.85;
+  } else if (
+    !playerStunned &&
+    availableAbilities.some(a => a.type === 'dodge') &&
+    availableAbilities.some(a => a.type === 'stun') &&
+    Math.random() < 0.33 // 33% chance to predict player will stun
+  ) {
+    // Predict player will use stun, so dodge
+    selectedAbility = availableAbilities.find(a => a.type === 'dodge')!;
+    analysis = "I predict the player may try to stun me, so I'll dodge to avoid it.";
+    reasoning = "Dodge now counters stun, so using dodge can avoid being stunned and taking damage.";
+    confidence = 0.8;
   } else if (!playerStunned && availableAbilities.some(a => a.type === 'stun')) {
-    // Stun to control the game
+    // Stun to control the game, but less likely if player has dodge
+    const playerHasDodge = availableAbilities.some(a => a.type === 'dodge');
     selectedAbility = availableAbilities.find(a => a.type === 'stun')!;
-    analysis = "Stunning the player will give me tempo advantage next turn.";
-    reasoning = "Stun denies opponent's turn while I can freely act, creating significant advantage.";
-    confidence = 0.75;
+    analysis = playerHasDodge
+      ? "Stunning the player, but aware they could dodge and avoid it."
+      : "Stunning the player will give me tempo advantage next turn.";
+    reasoning = playerHasDodge
+      ? "If the player dodges, my stun will be avoided, but if not, I gain a big advantage."
+      : "Stun denies opponent's turn while I can freely act, creating significant advantage.";
+    confidence = playerHasDodge ? 0.55 : 0.75;
   } else if (availableAbilities.some(a => a.type === 'block')) {
     // Block if expecting damage
     selectedAbility = availableAbilities.find(a => a.type === 'block')!;

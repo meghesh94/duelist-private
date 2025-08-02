@@ -34,6 +34,10 @@ export function resolveCombat(
   if (playerAction.type === 'stun') playerStunsAI = true;
   if (aiAction.type === 'stun') aiStunsPlayer = true;
 
+  // Check if either player is dodging
+  const playerDodges = playerAction.type === 'dodge';
+  const aiDodges = aiAction.type === 'dodge';
+
   // If both stun, both are stunned and do nothing
   if (playerStunsAI && aiStunsPlayer) {
     // Both stunned: add temporary stunned effect to both for this turn
@@ -60,8 +64,8 @@ export function resolveCombat(
     });
     playerResult = { damage: 0, heal: 0, selfDamage: 0, logs: [], selfStatusEffects: [], targetStatusEffects: [] };
     aiResult = { damage: 0, heal: 0, selfDamage: 0, logs: [], selfStatusEffects: [], targetStatusEffects: [] };
-  } else if (playerStunsAI) {
-    // Player stuns AI: AI does nothing, player acts
+  } else if (playerStunsAI && !aiDodges) {
+    // Player stuns AI: AI does nothing, player acts, unless AI dodges
     playerResult = processAction(player, ai, playerAction, 'player', turn, false);
     battleLog.push(...playerResult.logs);
     if (playerResult.selfStatusEffects && playerResult.selfStatusEffects.length > 0) {
@@ -82,8 +86,21 @@ export function resolveCombat(
       icon: 'zap',
     });
     aiResult = { damage: 0, heal: 0, selfDamage: 0, logs: [], selfStatusEffects: [], targetStatusEffects: [] };
-  } else if (aiStunsPlayer) {
-    // AI stuns player: player does nothing, AI acts
+  } else if (playerStunsAI && aiDodges) {
+    // AI dodges player's stun: AI is not stunned or damaged
+    playerResult = processAction(player, ai, playerAction, 'player', turn, false);
+    battleLog.push(...playerResult.logs);
+    battleLog.push({
+      id: `${turn}-ai-dodges-stun`,
+      turn,
+      message: `${ai.name} dodges the stun and takes no damage!`,
+      type: 'status',
+      timestamp: Date.now(),
+    });
+    aiResult = processAction(ai, player, aiAction, 'ai', turn, false);
+    battleLog.push(...aiResult.logs);
+  } else if (aiStunsPlayer && !playerDodges) {
+    // AI stuns player: player does nothing, AI acts, unless player dodges
     battleLog.push({
       id: `${turn}-player-stunned-immediate`,
       turn,
@@ -112,6 +129,19 @@ export function resolveCombat(
     if (aiResult.selfStatusEffects && aiResult.selfStatusEffects.length > 0) {
       ai.statusEffects.push(...aiResult.selfStatusEffects);
     }
+  } else if (aiStunsPlayer && playerDodges) {
+    // Player dodges AI's stun: player is not stunned or damaged
+    aiResult = processAction(ai, player, aiAction, 'ai', turn, false);
+    battleLog.push(...aiResult.logs);
+    battleLog.push({
+      id: `${turn}-player-dodges-stun`,
+      turn,
+      message: `${player.name} dodges the stun and takes no damage!`,
+      type: 'status',
+      timestamp: Date.now(),
+    });
+    playerResult = processAction(player, ai, playerAction, 'player', turn, false);
+    battleLog.push(...playerResult.logs);
   } else {
     // Normal case: both act
     playerResult = processAction(player, ai, playerAction, 'player', turn, false);
@@ -356,7 +386,7 @@ function processAction(
   logs.push({
     id: `${turn}-${actorType}-action`,
     turn,
-    message: `${actor.name} uses ${action.name}!`,
+    message: `${actorType}:${action.id}:${action.name}`,
     type: 'action',
     timestamp: Date.now(),
   });

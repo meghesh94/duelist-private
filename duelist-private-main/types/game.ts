@@ -40,6 +40,9 @@ export interface GameState {
   aiOptions: Ability[];
   battleLog: BattleLogEntry[];
   winner: 'player' | 'ai' | null;
+  draftOptions: Ability[]; // Added for draft phase
+  lastTurnPlayerAbility?: Ability;
+  lastTurnAIAbility?: Ability;
 }
 
 export interface BattleLogEntry {

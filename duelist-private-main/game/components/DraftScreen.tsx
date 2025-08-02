@@ -42,7 +42,7 @@ export function DraftScreen({ gameState, onDraftAbility }: DraftScreenProps) {
         </Text>
         
         <View style={styles.draftOptions}>
-          {gameState.draftOptions.map((ability) => (
+          {gameState.draftOptions.map((ability: any) => (
             <AnimatedAbilityCard
               key={ability.id}
               ability={ability}

@@ -35,6 +35,7 @@ const initialGameState: GameState = {
   },
   playerOptions: getRandomAbilities(3),
   aiOptions: getRandomAbilities(3),
+  draftOptions: [],
   battleLog: [{
     id: 'game-start',
     turn: 0,
@@ -48,21 +49,7 @@ const initialGameState: GameState = {
 export function useGameState() {
   const [gameState, setGameState] = useState<GameState>(initialGameState);
 
-  const startGame = useCallback(() => {
-    setGameState({
-      ...initialGameState,
-      phase: 'duel',
-      playerOptions: getRandomAbilities(3),
-      aiOptions: getRandomAbilities(3),
-      battleLog: [{
-        id: 'game-start',
-        turn: 0,
-        message: 'Welcome to Shadow Duelist! Abilities will surface each turn!',
-        type: 'system',
-        timestamp: Date.now(),
-      }],
-    });
-  }, []);
+  // Removed misplaced setGameState block
   const selectAbility = useCallback(async (abilityId: string) => {
     // Optionally show loading in UI via a separate state if needed
     // If player is stunned, skip their move and only let AI act
@@ -165,8 +152,11 @@ export function useGameState() {
         },
         playerOptions: nextPlayerOptions,
         aiOptions: nextAiOptions,
+        draftOptions: gameState.draftOptions || [],
         battleLog: finalBattleLog,
-        winner
+        winner,
+        lastTurnPlayerAbility: undefined,
+        lastTurnAIAbility: aiAbility,
       });
       return;
     }
@@ -251,17 +241,21 @@ export function useGameState() {
       },
       playerOptions: nextPlayerOptions,
       aiOptions: nextAiOptions,
+      draftOptions: gameState.draftOptions || [],
       battleLog: finalBattleLog,
-      winner
+      winner,
+      lastTurnPlayerAbility: playerAbility,
+      lastTurnAIAbility: aiAbility,
     });
   }, [gameState]);
 
-  const resetGame = useCallback(() => {
+  const startGame = useCallback(() => {
     setGameState({
       ...initialGameState,
       phase: 'duel',
       playerOptions: getRandomAbilities(3),
       aiOptions: getRandomAbilities(3),
+      draftOptions: [],
       battleLog: [{
         id: 'game-start',
         turn: 0,
@@ -269,8 +263,11 @@ export function useGameState() {
         type: 'system',
         timestamp: Date.now(),
       }],
+      winner: null,
     });
-  }, [startGame]);
+  }, []);
+
+  const resetGame = startGame;
 
   // Placeholder draftAbility function
   const draftAbility = () => {
