@@ -38,11 +38,11 @@ export function getCalculationMessage(entries: BattleLogEntry[]): TurnCalculatio
     }
   });
 
-  // Try to extract final HP from any system/status message like "Riven is at 24 HP" or "Orion is at 18 HP"
+  // Extract final HP from end-of-turn log message: '<name> HP at end of turn: <hp>'
   entries.forEach(e => {
-    const playerHpMatch = e.message.match(/Riven[^\d]*(\d+) HP/);
+    const playerHpMatch = e.message.match(/Riven HP at end of turn: (\d+)/);
     if (playerHpMatch) playerFinalHp = parseInt(playerHpMatch[1], 10);
-    const aiHpMatch = e.message.match(/Orion[^\d]*(\d+) HP/);
+    const aiHpMatch = e.message.match(/Orion HP at end of turn: (\d+)/);
     if (aiHpMatch) aiFinalHp = parseInt(aiHpMatch[1], 10);
   });
 
