@@ -47,16 +47,15 @@ export function TurnSummaryModal(props: TurnSummaryProps) {
   const playerFireballStatus = playerAbility && playerAbility.id === 'fireball' ? getFireballStatus('player') : undefined;
   const aiFireballStatus = aiAbility && aiAbility.id === 'fireball' ? getFireballStatus('ai') : undefined;
 
-  // Direct AI thought (no streaming)
+  // Show the AI thought exactly as logged (after removing only the prefix)
   let aiReason = aiThought;
-  if (aiReason) {
-    aiReason = aiReason.replace(/^I chose to use the ability [^-–:]+[-–:]+/i, '');
-    aiReason = aiReason.replace(/^I chose the ability [^-–:]+(because|to|with|using)?/i, '');
-    aiReason = aiReason.replace(/^Used [^-–:]+(because|to|with|using)?/i, '');
-    aiReason = aiReason.replace(/^[^:]+:/, '');
-    aiReason = aiReason.replace(/^(because|to|with|using)\s*/i, '');
-    aiReason = aiReason.trim();
-    if (aiReason.length > 0) aiReason = aiReason.charAt(0).toUpperCase() + aiReason.slice(1);
+  if (aiReason && aiReason.toLowerCase().startsWith('ai thought:')) {
+    aiReason = aiReason.slice('ai thought:'.length).trim();
+  }
+  if (aiReason && aiReason.length > 0) {
+    aiReason = aiReason.charAt(0).toUpperCase() + aiReason.slice(1);
+  } else {
+    aiReason = "Orion made a move.";
   }
 
   return (
@@ -97,7 +96,7 @@ export function TurnSummaryModal(props: TurnSummaryProps) {
               <View style={styles.aiChatRow}>
                 <Text style={styles.avatar}>{aiChar.avatar}</Text>
                 <View style={styles.aiChatBubble}>
-                  <Text style={styles.thoughtText}>{aiReason}</Text>
+                  <Text style={styles.thoughtText}><Text style={{fontWeight: 'bold'}}>Orion's thought: </Text>{aiReason}</Text>
                   <View style={styles.aiChatTail} />
                 </View>
               </View>

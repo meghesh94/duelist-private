@@ -118,6 +118,9 @@ Do not include explanations or extra fields. No other text is allowed.
     if (explainData.choices && explainData.choices[0] && explainData.choices[0].message && explainData.choices[0].message.content) {
       thought = explainData.choices[0].message.content.trim();
     }
+    if (!thought) {
+      thought = 'I chose this move based on the current HP and abilities.';
+    }
     console.log(`AI Used: ${chosenAbility.name} (${chosenAbility.id}) | Thought: ${thought}`);
     return { abilityId: chosenAbility.id, thought, abilityName: chosenAbility.name };
   } catch (err) {

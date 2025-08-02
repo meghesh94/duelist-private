@@ -65,15 +65,25 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
       const playerAbility = getAbilityFromEntry(playerActionEntry, gameState.playerOptions);
       const aiAbility = getAbilityFromEntry(aiActionEntry, gameState.aiOptions);
       const calculation = getCalculationMessage(latestTurnEntries);
-      const aiThoughtEntry = latestTurnEntries.find(e => e.message.toLowerCase().includes('ai thought:'));
+      let aiThoughtEntry = latestTurnEntries.find(e => e.message.toLowerCase().includes('ai thought:'));
+      let aiThought = aiThoughtEntry ? aiThoughtEntry.message.replace(/ai thought:/i, '').trim() : '';
+      // Fallback: if no AI thought for this turn, use the most recent one in the battle log
+      if (!aiThought) {
+        const allAIThoughts = [...gameState.battleLog].reverse().filter(e => e.message.toLowerCase().includes('ai thought:'));
+        if (allAIThoughts.length > 0) {
+          aiThought = allAIThoughts[0].message.replace(/ai thought:/i, '').trim();
+        }
+      }
       setTurnSummaryData({
         playerAbility: gameState.lastTurnPlayerAbility || playerAbility || null,
         aiAbility: gameState.lastTurnAIAbility || aiAbility || null,
-        aiThought: aiThoughtEntry ? aiThoughtEntry.message.replace(/ai thought:/i, '').trim() : '',
+        aiThought,
         calculation,
       });
-      setShowTurnSummary(true);
-      setPendingNextTurn(true);
+      if (aiThought) {
+        setShowTurnSummary(true);
+        setPendingNextTurn(true);
+      }
     }
   }, [gameState.battleLog.length, gameState.currentTurn, gameState.phase]);
 
@@ -215,12 +225,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 32,
   },
-  title: {
-    color: '#FFFFFF',
-    overflow: 'hidden',
-    fontWeight: '800',
-    minHeight: 40,
-  },
+  // Removed duplicate 'title' style
   title: {
     textAlign: 'center',
     textShadowColor: '#EF4444',
