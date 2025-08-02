@@ -100,7 +100,7 @@ Do not include explanations or extra fields. No other text is allowed.
 
     // Step 2: Get explanation/thought
     const explainPrompt = `Explain why you chose the ability ${chosenAbility.name} (${chosenAbility.id}) in this situation. Be concise and strategic.`;
-    const explainResponse = await fetch('http://localhost:3001/openai', {
+    const explainResponse = await fetch('https://duelist-private.onrender.com', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
