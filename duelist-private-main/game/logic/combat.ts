@@ -176,6 +176,13 @@ export function resolveCombat(
   if (aiDamageFinal) {
     player.hp -= aiDamageFinal;
     battleLog.push({
+      id: `${turn}-player-damage`,
+      turn,
+      message: `${player.name} takes ${aiDamageFinal} damage!`,
+      type: 'damage',
+      timestamp: Date.now(),
+    });
+    battleLog.push({
       id: `${turn}-player-hp-damage`,
       turn,
       message: `${player.name} HP after taking damage: ${player.hp}`,
@@ -220,6 +227,13 @@ export function resolveCombat(
   }
   if (playerDamageFinal) {
     ai.hp -= playerDamageFinal;
+    battleLog.push({
+      id: `${turn}-ai-damage`,
+      turn,
+      message: `${ai.name} takes ${playerDamageFinal} damage!`,
+      type: 'damage',
+      timestamp: Date.now(),
+    });
     battleLog.push({
       id: `${turn}-ai-hp-damage`,
       turn,
@@ -351,15 +365,7 @@ function processAction(
     case 'damage': {
       const baseDamage = isStunned ? Math.ceil(action.power / 2) : action.power;
       damage = calculateDamage(baseDamage, target);
-      if (damage > 0) {
-        logs.push({
-          id: `${turn}-${actorType}-damage`,
-          turn,
-          message: `${target.name} takes ${damage} damage!`,
-          type: 'damage',
-          timestamp: Date.now(),
-        });
-      } else {
+      if (damage <= 0) {
         logs.push({
           id: `${turn}-${actorType}-blocked`,
           turn,
