@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 3001;
 const allowedOrigins = [
   'http://localhost:8081',
   'https://duelist-app-indol.vercel.app',
+  'https://duelist-app-git-master-megheshs-projects-6a5cfef4.vercel.app',
 ];
 app.use(cors({
   origin: function (origin, callback) {
