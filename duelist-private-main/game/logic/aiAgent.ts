@@ -66,10 +66,10 @@ Do not include explanations or extra fields. No other text is allowed.
 `;
 
   try {
-    // Debug: log the API URL being used
-    console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+    // Debug: log the API URL being used (Expo web uses EXPO_PUBLIC_ prefix)
+    console.log('EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL);
     // Step 1: Pick the move
-    const apiUrl = process.env.REACT_APP_API_URL || '/api/openrouter/chat';
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL || '/api/openrouter/chat';
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
