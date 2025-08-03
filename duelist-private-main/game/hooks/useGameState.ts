@@ -234,16 +234,9 @@ export function useGameState() {
   }, [gameState]);
 
   const startGame = useCallback(() => {
-    // Deep clone initial player and AI to avoid reference issues
-    const freshPlayer = JSON.parse(JSON.stringify(initialPlayer));
-    const freshAI = JSON.parse(JSON.stringify(initialAI));
     setGameState({
       ...initialGameState,
       phase: 'duel',
-      players: {
-        player: freshPlayer,
-        ai: freshAI,
-      },
       playerOptions: getRandomAbilities(3),
       aiOptions: getRandomAbilities(3),
       draftOptions: [],

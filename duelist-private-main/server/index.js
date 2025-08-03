@@ -5,6 +5,8 @@ const express = require('express');
 const cors = require('cors');
 
 
+const fetch = require('node-fetch');
+const { chatWithOpenRouter } = require('./openrouter');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -54,6 +56,18 @@ app.post('/openai', async (req, res) => {
     res.status(response.status).json(data);
   } catch (err) {
     console.error('Server error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/openrouter/chat', async (req, res) => {
+  try {
+    const { messages, model } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'messages (array) is required' });
+    }
+    const data = await chatWithOpenRouter(messages, model);
+    res.json(data);
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

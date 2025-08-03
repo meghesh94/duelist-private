@@ -434,7 +434,6 @@ function processAction(
 
   switch (action.type) {
     case 'damage': {
-      let fireballMissed = false;
       // Special case: fireball has a 50% chance to miss (unless target is stunned)
       if (action.id === 'fireball') {
         const targetStunned = target.statusEffects.some(effect => effect.type === 'stun');
@@ -447,23 +446,20 @@ function processAction(
             type: 'status',
             timestamp: Date.now(),
           });
-          fireballMissed = true;
+          damage = 0;
+          break;
         }
       }
-      if (!fireballMissed) {
-        const baseDamage = isStunned ? Math.ceil(action.power / 2) : action.power;
-        damage = calculateDamage(baseDamage, target);
-        if (damage <= 0) {
-          logs.push({
-            id: `${turn}-${actorType}-blocked`,
-            turn,
-            message: `${target.name} blocks the attack!`,
-            type: 'status',
-            timestamp: Date.now(),
-          });
-        }
-      } else {
-        damage = 0;
+      const baseDamage = isStunned ? Math.ceil(action.power / 2) : action.power;
+      damage = calculateDamage(baseDamage, target);
+      if (damage <= 0) {
+        logs.push({
+          id: `${turn}-${actorType}-blocked`,
+          turn,
+          message: `${target.name} blocks the attack!`,
+          type: 'status',
+          timestamp: Date.now(),
+        });
       }
       break;
     }
