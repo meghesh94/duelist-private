@@ -1,28 +1,9 @@
+
 import { Ability, Player } from '../../types/game';
 
-// OpenAI-powered agent for strategic decision making
-export async function getAgentMoveLLM(
-  ai: Player,
-  player: Player,
-  aiOptions: Ability[],
-  playerOptions: Ability[],
-  battleLog: any[]
-): Promise<{ abilityId: string, thought: string, abilityName: string }> {
-  // Clamp HP values to max
-  const safeAiHp = Math.min(ai.hp, ai.maxHp);
-  const safePlayerHp = Math.min(player.hp, player.maxHp);
-  ai.hp = safeAiHp;
-  player.hp = safePlayerHp;
-  const playerStatus = player.statusEffects.length > 0
-    ? player.statusEffects.map(e => `${e.name}${e.type ? ` (${e.type})` : ''}`).join(', ')
-    : 'None';
-
-  // Build prompt for LLM
-  const pickPrompt = `
+// Cache the static part of the prompt
+const STATIC_PROMPT = `
 You are a strategic duelist AI. Your goal is to win the duel by making the smartest possible move each turn.
-
-YOUR HP (AI): ${safeAiHp}/${ai.maxHp}
-OPPONENT HP (Player): ${safePlayerHp}/${player.maxHp}
 
 ABILITY REFERENCE (detailed):
 - Strike: Deal 5 damage to the opponent. Use when you need reliable damage and the opponent is not blocking or dodging.
@@ -49,39 +30,63 @@ STRATEGY RULES:
 
 ---
 
-Your available abilities: ${aiOptions.map(a => `${a.name} (${a.type}, power: ${a.power})`).join(', ')}
-Opponent status: ${playerStatus}
-
----
-
 DECISION INSTRUCTIONS:
 - Factor in: YOUR HP, PLAYER HP, abilities available, and opponent status.
 - If YOUR HP is low (≤5), avoid risky/self-damaging moves unless they secure a win.
 - Never choose a move that leads to your defeat if a safer alternative exists.
 - Aim to maximize your survival *and* victory odds every turn.
 
-Respond only with the chosen abilityId in valid JSON:
-{ "abilityId": "..." }
-Do not include explanations or extra fields. No other text is allowed.
+IMPORTANT: Respond ONLY with a valid JSON object in this exact format:
+{
+  "abilityId": "<the id of the chosen ability>",
+  "thought": "<a concise, strategic explanation (1-2 sentences) for why you chose the ability in abilityId, based on the current game state above. The explanation MUST be specific to the chosen ability and situation, referencing your HP, the opponent's HP, available abilities, and status effects as relevant. Do not use generic or repetitive phrases like 'chipping away at HP'—explain your reasoning as a player would, showing your thought process for this specific turn. Make the explanation sound like a real player: use casual, expressive, or emotional language, and show some personality or confidence.>"
+}
+CRITICAL: The value for "abilityId" MUST be the exact id string from your available abilities list above (e.g., "fireball", "strike", etc.), NOT the name or any other value. If you do not use the exact id, you will lose the game.
+Do NOT add any other fields, text, or explanation. If you do not follow this format, you will lose the game.
 `;
+
+// OpenAI-powered agent for strategic decision making
+export async function getAgentMoveLLM(
+  ai: Player,
+  player: Player,
+  aiOptions: Ability[],
+  playerOptions: Ability[],
+  battleLog: any[]
+): Promise<{ abilityId: string, thought: string, abilityName: string }> {
+  // Clamp HP values to max
+  const safeAiHp = Math.min(ai.hp, ai.maxHp);
+  const safePlayerHp = Math.min(player.hp, player.maxHp);
+  ai.hp = safeAiHp;
+  player.hp = safePlayerHp;
+  const playerStatus = player.statusEffects.length > 0
+    ? player.statusEffects.map(e => `${e.name}${e.type ? ` (${e.type})` : ''}`).join(', ')
+    : 'None';
+
+  // Build prompt for LLM
+  // ...existing code...
 
   try {
     // Debug: log the API URL being used (Expo web uses EXPO_PUBLIC_ prefix)
     console.log('EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL);
-    // Step 1: Pick the move
-    const apiUrl = process.env.EXPO_PUBLIC_API_URL || '/api/openrouter/chat';
+    // Step 1: Pick the move and get explanation in one call
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL || '/api/openrouter/chat';
+  // Build the dynamic part of the prompt
+  const dynamicPrompt = `\nYOUR HP (AI): ${safeAiHp}/${ai.maxHp}\nOPPONENT HP (Player): ${safePlayerHp}/${player.maxHp}\n\nYour available abilities: ${aiOptions.map(a => `${a.name} (${a.type}, power: ${a.power})`).join(', ')}\nOpponent status: ${playerStatus}\n`;
+  // Combine static and dynamic parts
+  const combinedPrompt = STATIC_PROMPT + dynamicPrompt;
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        messages: [{ role: 'user', content: pickPrompt }],
-        model: 'meta-llama/llama-3.3-70b-instruct'
+        messages: [{ role: 'user', content: combinedPrompt }],
+        model: 'deepseek/deepseek-chat-v3-0324:free'
       })
     });
     const data = await response.json();
     let abilityId = aiOptions[0].id;
+    let llmThought = '';
     if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
       try {
         const match = data.choices[0].message.content.match(/\{[^}]*\}/);
@@ -90,34 +95,16 @@ Do not include explanations or extra fields. No other text is allowed.
           if (parsed.abilityId) {
             abilityId = parsed.abilityId;
           }
+          if (parsed.thought) {
+            llmThought = parsed.thought;
+          }
         }
       } catch (e) {
         // fallback to default abilityId
       }
     }
-
-    // Find the chosen ability object
     const chosenAbility = aiOptions.find(a => a.id === abilityId) || aiOptions[0];
-
-    // Step 2: Get explanation/thought
-    const explainPrompt = `Explain why you chose the ability ${chosenAbility.name} (${chosenAbility.id}) in this situation. Be concise and strategic.`;
-    const explainResponse = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: explainPrompt }],
-        model: 'meta-llama/llama-3.3-70b-instruct'
-      })
-    });
-    const explainData = await explainResponse.json();
-    let llmThought = '';
-    if (explainData.choices && explainData.choices[0] && explainData.choices[0].message && explainData.choices[0].message.content) {
-      llmThought = explainData.choices[0].message.content.trim();
-    }
-    // Always enforce the thought to start with the correct ability used
-    const thought = `I chose to use the ability "${chosenAbility.name}" (${chosenAbility.id})${llmThought ? ' - ' + llmThought : ''}`;
+    const thought = llmThought || `AI fallback: No explanation returned.`;
     console.log(`AI Used: ${chosenAbility.name} (${chosenAbility.id}) | Thought: ${thought}`);
     return { abilityId: chosenAbility.id, thought, abilityName: chosenAbility.name };
   } catch (err) {
