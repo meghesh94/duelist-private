@@ -1,7 +1,6 @@
 // openrouter.js
 // Clean OpenRouter API integration for backend
 
-const fetch = require('node-fetch');
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
