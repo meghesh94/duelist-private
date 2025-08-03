@@ -55,7 +55,6 @@ Opponent status: ${playerStatus}
 ---
 
 DECISION INSTRUCTIONS:
-- When making your decision, always compare YOUR HP to the PLAYER HP. If you have less HP than the player, consider defensive or healing moves. If you have more HP, you may play more aggressively, but always weigh the risks.
 - Factor in: YOUR HP, PLAYER HP, abilities available, and opponent status.
 - If YOUR HP is low (≤5), avoid risky/self-damaging moves unless they secure a win.
 - Never choose a move that leads to your defeat if a safer alternative exists.
@@ -67,8 +66,10 @@ Do not include explanations or extra fields. No other text is allowed.
 `;
 
   try {
+    // Debug: log the API URL being used
+    console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
     // Step 1: Pick the move
-    const apiUrl = process.env.REACT_APP_API_URL || 'https://duelist-private.onrender.com/openai';
+    const apiUrl = process.env.REACT_APP_API_URL || '/api/openrouter/chat';
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -76,9 +77,7 @@ Do not include explanations or extra fields. No other text is allowed.
       },
       body: JSON.stringify({
         messages: [{ role: 'user', content: pickPrompt }],
-        max_tokens: 100,
-        model: "gpt-3.5-turbo",
-        temperature: 0.7
+        model: 'meta-llama/llama-3.3-70b-instruct'
       })
     });
     const data = await response.json();
@@ -100,8 +99,8 @@ Do not include explanations or extra fields. No other text is allowed.
     // Find the chosen ability object
     const chosenAbility = aiOptions.find(a => a.id === abilityId) || aiOptions[0];
 
-    // Step 2: Get concise explanation/thought
-    const explainPrompt = `In one short sentence, explain why you chose the ability ${chosenAbility.name} (${chosenAbility.id}) in this situation. Be as brief and strategic as possible.`;
+    // Step 2: Get explanation/thought
+    const explainPrompt = `Explain why you chose the ability ${chosenAbility.name} (${chosenAbility.id}) in this situation. Be concise and strategic.`;
     const explainResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -109,19 +108,16 @@ Do not include explanations or extra fields. No other text is allowed.
       },
       body: JSON.stringify({
         messages: [{ role: 'user', content: explainPrompt }],
-        max_tokens: 60,
-        model: "gpt-3.5-turbo",
-        temperature: 0.7
+        model: 'meta-llama/llama-3.3-70b-instruct'
       })
     });
     const explainData = await explainResponse.json();
-    let thought = '';
+    let llmThought = '';
     if (explainData.choices && explainData.choices[0] && explainData.choices[0].message && explainData.choices[0].message.content) {
-      thought = explainData.choices[0].message.content.trim();
+      llmThought = explainData.choices[0].message.content.trim();
     }
-    if (!thought) {
-      thought = 'I chose this move based on the current HP and abilities.';
-    }
+    // Always enforce the thought to start with the correct ability used
+    const thought = `I chose to use the ability "${chosenAbility.name}" (${chosenAbility.id})${llmThought ? ' - ' + llmThought : ''}`;
     console.log(`AI Used: ${chosenAbility.name} (${chosenAbility.id}) | Thought: ${thought}`);
     return { abilityId: chosenAbility.id, thought, abilityName: chosenAbility.name };
   } catch (err) {
