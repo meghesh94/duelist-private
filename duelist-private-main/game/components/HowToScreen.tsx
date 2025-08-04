@@ -14,7 +14,7 @@ export function HowToScreen({ onBack }: { onBack: () => void }) {
     { id: 'dodge', name: 'Dodge', description: 'Avoid all damage this turn.', icon: 'wind', type: 'dodge' as const, power: 0 },
     { id: 'poison', name: 'Poison Strike', description: 'Deal 2 damage and poison for 2 damage/turn for 3 turns. Poison does not stack, but is refreshed if reapplied. Poison damage is applied at the end of each turn, starting from the next turn after application.', icon: 'droplets', type: 'poison' as const, power: 2 },
     { id: 'berserk', name: 'Berserker Rage', description: 'Deal 6 damage but take 1 self-damage.', icon: 'sword', type: 'damage' as const, power: 6 },
-    { id: 'vampiric', name: 'Vampiric Strike', description: 'Deal 4 damage and heal for damage dealt.', icon: 'heart', type: 'drain' as const, power: 4 },
+    { id: 'lifesteal', name: 'Lifesteal', description: 'Deal 4 damage and heal for damage dealt.', icon: 'heart', type: 'drain' as const, power: 4 },
     { id: 'ice', name: 'Ice Shard', description: 'Deal 3 damage and freeze the enemy. Freeze blocks all healing for 1 turn, starting from the next turn after application.', icon: 'zap', type: 'freeze' as const, power: 3 },
   ];
   return (
@@ -27,7 +27,7 @@ export function HowToScreen({ onBack }: { onBack: () => void }) {
       <Text style={styles.sectionTitle}>Abilities</Text>
       <RNScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 12 }}>
         {allAbilities.map((ability) => (
-          <AnimatedAbilityCard key={ability.id} ability={ability} compact style={{ marginRight: 12 }} />
+          <AnimatedAbilityCard key={ability.id} ability={ability} compact />
         ))}
       </RNScrollView>
       <Text style={styles.sectionTitle}>How a Turn Works</Text>

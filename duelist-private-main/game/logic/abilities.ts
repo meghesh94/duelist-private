@@ -75,7 +75,7 @@ export const ABILITIES: Ability[] = [
   },
   {
     id: 'lifesteal',
-    name: 'Vampiric Strike',
+    name: 'Lifesteal',
     description: 'Deal 4 damage and heal for damage dealt.',
     icon: 'heart',
     type: 'drain',

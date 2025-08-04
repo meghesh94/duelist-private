@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Modal, Animated, Easing, Platform } from 'react-native';
 import { Scroll as ScrollIcon, HelpCircle } from 'lucide-react-native';
 import { HelpModalContent } from './HelpModalContent';
 import { AnimatedAbilityCard } from './AnimatedAbilityCard';
@@ -9,6 +9,13 @@ import { TurnSummaryModal } from './TurnSummaryModal';
 import { getCalculationMessage } from '../logic/getCalculationMessage';
 import { GameState, Ability, AIThought } from '../../types/game';
 import { getCharacter } from '../logic/characters';
+import { LogoAnimation } from './LogoAnimation';
+let LottieComponent;
+if (Platform.OS === 'web') {
+  LottieComponent = require('lottie-react').default;
+} else {
+  LottieComponent = require('lottie-react-native').default;
+}
 
 
 interface DuelScreenProps {
@@ -28,6 +35,7 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
   const [pendingNextTurn, setPendingNextTurn] = useState(false);
   const [showBattleLog, setShowBattleLog] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const playerCharacter = getCharacter('player');
   const aiCharacter = getCharacter('ai');
@@ -44,11 +52,12 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
 
   // Show summary modal after a turn is resolved (when new entries appear for the turn)
   React.useEffect(() => {
-    // Only show summary if the latest turn has at least one action entry (not just system messages)
+    // Show summary if the latest turn has at least one action entry OR a 'both stunned' status entry
     const hasActionEntry = latestTurnEntries.some(e => e.type === 'action');
+    const hasBothStunned = latestTurnEntries.some(e => e.type === 'status' && e.message.toLowerCase().includes('both') && e.message.toLowerCase().includes('stunned'));
     if (
       latestTurnEntries.length > 0 &&
-      hasActionEntry &&
+      (hasActionEntry || hasBothStunned) &&
       ['duel', 'action'].includes(gameState.phase) &&
       !pendingNextTurn
     ) {
@@ -80,10 +89,9 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
         aiThought,
         calculation,
       });
-      if (aiThought) {
-        setShowTurnSummary(true);
-        setPendingNextTurn(true);
-      }
+      setShowTurnSummary(true);
+      setPendingNextTurn(true);
+      setLoading(false);
     }
   }, [gameState.battleLog.length, gameState.currentTurn, gameState.phase]);
 
@@ -92,6 +100,7 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
   };
 
   const handleConfirmAction = (abilityId: string) => {
+    setLoading(true);
     onSelectAbility(abilityId);
     setSelectedAbility(null);
   };
@@ -108,7 +117,8 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
         <View style={styles.headerRow}>
           <View style={styles.headerSpacer} />
           <View style={styles.headerTitleWrapper}>
-            <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">⚔️ Duelist</Text>
+            <LogoAnimation size={48} />
+            <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">Duelist</Text>
           </View>
           <View style={styles.headerIconsWrapper}>
             <TouchableOpacity style={styles.iconButton} onPress={() => setShowHelp(true)}>
@@ -170,7 +180,7 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
                 />
                 {selectedAbility === ability.id && !showTurnSummary && (
                   <TouchableOpacity style={styles.confirmButton} onPress={() => handleConfirmAction(ability.id)}>
-                    <Text style={styles.confirmText}>Execute Action</Text>
+                    <Text style={styles.confirmText}>Play</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -212,6 +222,26 @@ export function DuelScreen({ gameState, onSelectAbility }: DuelScreenProps) {
           ai={gameState.players.ai}
         />
       )}
+      <Modal
+        visible={loading}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ backgroundColor: '#222', padding: 32, borderRadius: 16, alignItems: 'center' }}>
+            <LottieComponent
+              {...(Platform.OS === 'web'
+                ? { animationData: require('../assets/sword-fight-lottie.json') }
+                : { source: require('../assets/sword-fight-lottie.json') })}
+              autoPlay
+              loop
+              style={{ width: 200, height: 200 }}
+            />
+            <Text style={{ color: '#fff', fontSize: 20, marginTop: 24 }}>Duel in progress...</Text>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }

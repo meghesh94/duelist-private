@@ -15,7 +15,7 @@ ABILITY REFERENCE (detailed):
 - Dodge: Avoid all damage this turn. Use when you expect a strong attack from the opponent or need to survive.
 - Poison Strike: Deal 2 damage and poison for 2 damage/turn for 3 turns. Poison does not stack, but is refreshed if reapplied. Poison damage is applied at the end of each turn, starting from the next turn after application. Use when you want to apply pressure over multiple turns or refresh poison.
 - Berserker Rage: Deal 6 damage but take 2 self-damage. Use only if it will guarantee a win or if you must take a risk to survive. Avoid at low HP.
-- Vampiric Strike: Deal 4 damage and heal for damage dealt. Use when you want to deal damage and recover HP, especially if you expect to survive the turn.
+- Lifesteal: Deal 4 damage and heal for damage dealt. Use when you want to deal damage and recover HP, especially if you expect to survive the turn.
 - Ice Shard: Deal 3 damage and freeze the enemy. Freeze blocks all healing for 1 turn, starting from the next turn after application. Use when you want to block the opponent's healing or deal moderate damage.
 
 IMPORTANT: Do not consider the name or flavor of the ability. Only use the actual effect and description provided above when making your decision and explanation.

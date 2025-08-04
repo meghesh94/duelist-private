@@ -3,5 +3,9 @@
     "@types/jest": "^30.0.0",
     "jest": "^30.0.4",
     "ts-jest": "^29.4.0"
+  },
+  "dependencies": {
+    "lottie-ios": "^4.5.1",
+    "lottie-react-native": "^7.3.0"
   }
 }

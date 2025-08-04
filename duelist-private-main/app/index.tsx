@@ -1,20 +1,9 @@
-import { HowToScreen } from '../game/components/HowToScreen';
-function HowToPlayModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContentFull}>
-          <HowToScreen onBack={onClose} />
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 import React, { useState } from 'react';
 import { AnimatedAbilityCard } from '../game/components/AnimatedAbilityCard';
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
+import { LogoAnimation } from '../game/components/LogoAnimation';
+import { HowToScreen } from '../game/components/HowToScreen';
 
 const allAbilities = [
   {
@@ -90,8 +79,8 @@ const allAbilities = [
     power: 6,
   },
   {
-    id: 'vampiric',
-    name: 'Vampiric Strike',
+    id: 'lifesteal',
+    name: 'Lifesteal',
     description: 'Deal 4 damage and heal for damage dealt.',
     icon: 'heart',
     type: 'drain' as const,
@@ -107,8 +96,19 @@ const allAbilities = [
   },
 ];
 
-
 const sampleAbilities = allAbilities.slice(0, 5);
+
+function HowToPlayModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContentFull}>
+          <HowToScreen onBack={onClose} />
+        </View>
+      </View>
+    </Modal>
+  );
+}
 
 function AbilitiesModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   return (
@@ -134,7 +134,6 @@ function AbilitiesModal({ visible, onClose }: { visible: boolean; onClose: () =>
   );
 }
 
-
 export default function HomeScreen() {
   const router = useRouter();
   const [showHowTo, setShowHowTo] = useState(false);
@@ -142,9 +141,10 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>⚔️ Shadow Duelist</Text>
+      <LogoAnimation size={72} />
+      <Text style={styles.title}>Shadow Duelist</Text>
       <Text style={styles.subtitle}>A turn-based battle of wits and shadows</Text>
-      <TouchableOpacity style={styles.button} onPress={() => router.push('/game')}>
+      <TouchableOpacity style={styles.button} onPress={() => router.push({ pathname: '/game' })}>
         <Text style={styles.buttonText}>Start Duel</Text>
       </TouchableOpacity>
       <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={() => setShowHowTo(true)}>
