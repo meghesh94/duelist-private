@@ -1,4 +1,3 @@
-
 import { Ability, Player } from '../../types/game';
 
 // Cache the static part of the prompt
@@ -81,7 +80,7 @@ export async function getAgentMoveLLM(
       },
       body: JSON.stringify({
         messages: [{ role: 'user', content: combinedPrompt }],
-        model: 'deepseek/deepseek-chat-v3-0324:free'
+        model: 'mistralai/mistral-7b-instruct:free'
       })
     });
     const data = await response.json();

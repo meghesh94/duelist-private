@@ -5,7 +5,7 @@
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
-async function chatWithOpenRouter(messages, model = 'openai/gpt-3.5-turbo') {
+async function chatWithOpenRouter(messages, model = 'mistralai/mistral-7b-instruct:free') {
   if (!OPENROUTER_API_KEY) {
     throw new Error('OPENROUTER_API_KEY is not set in environment variables');
   }

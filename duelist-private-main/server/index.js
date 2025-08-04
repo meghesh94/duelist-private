@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 console.log('OPENAI_API_KEY at startup:', process.env.OPENAI_API_KEY);
 const express = require('express');
@@ -43,7 +42,7 @@ app.post('/openai', async (req, res) => {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'mistralai/mistral-7b-instruct:free',
         messages,
         ...rest
       })
